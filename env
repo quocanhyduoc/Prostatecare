@@ -1,0 +1,46 @@
+# Environment Variables for Production Deployment
+# Copy this file to .env and update with your actual values
+# Sao chép file này thành .env và cập nhật với giá trị thực tế
+
+# Database Configuration
+# Cấu hình Database
+DATABASE_URL=postgresql://nhurod7r_prostatecareai:Nick@191830933@103.124.95.161/nhurod7r_prostate_cancer_db
+# For MySQL: DATABASE_URL=mysql://username:password@localhost/database_name
+
+# Session Security
+# Bảo mật Session
+SESSION_SECRET=QF1/4+Me144jTeAnE4YzYQMFBK7wb/f5cmPBzbhn195lWhNNPsMz4hzOv6jk3oeqFmK15fIdjCUsOyJL2pQoFg==
+
+# AI Integration
+# Tích hợp AI
+GEMINI_API_KEY=AIzaSyBgTdgam1GXtwFCou6GgNYrb0AfTsJcDuQ
+
+# SMS Notifications (Twilio)
+# Thông báo SMS
+TWILIO_ACCOUNT_SID=your-twilio-account-sid
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_PHONE_NUMBER=+1234567890
+
+# Email Configuration (Optional)
+# Cấu hình Email
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=quocanhyduoc
+MAIL_PASSWORD=
+
+# Application Settings
+# Cài đặt Ứng dụng
+FLASK_ENV=production
+FLASK_DEBUG=false
+
+# File Upload Settings
+# Cài đặt Upload File
+MAX_CONTENT_LENGTH=16777216
+UPLOAD_FOLDER=images
+
+# Security Settings
+# Cài đặt Bảo mật
+SESSION_COOKIE_SECURE=true
+SESSION_COOKIE_HTTPONLY=true
+WTF_CSRF_ENABLED=true
