@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Tạo lịch hẹn thông minh - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">{{ t.dashboard }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('patient_list') }}">{{ t.patients }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('patient_detail', patient_id=patient.id) }}">{{ patient.full_name }}</a></li>
+                <li class="breadcrumb-item active">Tạo lịch hẹn thông minh</li>
+            </ol>
+        </nav>
+        
+        <h1 class="page-title">
+            <i class="fas fa-brain"></i> Tạo lịch hẹn thông minh
+        </h1>
+        <p class="text-muted">Sử dụng AI để đề xuất lịch hẹn phù hợp cho bệnh nhân {{ patient.full_name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- AI Recommendations Panel -->
+    <div class="col-lg-4">
+        {% if ai_recommendations %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot"></i> Khuyến nghị AI</h5>
+                </div>
+                <div class="card-body">
+                    {% if ai_recommendations.predictions.bcr.status == 'success' %}
+                        <div class="alert alert-warning alert-sm mb-2">
+                            <strong>BCR Risk:</strong> {{ ai_recommendations.predictions.bcr.risk_level | title }}
+                            <br><small>Score: {{ ai_recommendations.predictions.bcr.risk_score }}/100</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if ai_recommendations.predictions.adt.status == 'success' %}
+                        <div class="alert alert-info alert-sm mb-2">
+                            <strong>ADT Benefit:</strong> {{ ai_recommendations.predictions.adt.benefit_category | title }}
+                            <br><small>Score: {{ ai_recommendations.predictions.adt.benefit_score }}/100</small>
+                        </div>
+                    {% endif %}
+                    
+                    <h6 class="mt-3">Đề xuất lịch hẹn:</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-calendar-check text-success"></i> Tái khám trong 1 tháng</li>
+                        <li><i class="fas fa-vial text-info"></i> Xét nghiệm PSA trong 2 tuần</li>
+                        <li><i class="fas fa-pills text-warning"></i> Đánh giá điều trị trong 3 tháng</li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Recent Context -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Lịch sử gần đây</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_appointments %}
+                    <h6>Lịch hẹn gần nhất:</h6>
+                    {% for apt in recent_appointments[:3] %}
+                        <div class="small mb-1">
+                            <i class="fas fa-calendar-alt text-muted"></i>
+                            {{ apt.appointment_date.strftime('%d/%m/%Y') }} - {{ apt.appointment_type }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if recent_blood_tests %}
+                    <h6 class="mt-3">Xét nghiệm gần nhất:</h6>
+                    {% for test in recent_blood_tests[:2] %}
+                        <div class="small mb-1">
+                            <i class="fas fa-vial text-muted"></i>
+                            {{ test.test_date.strftime('%d/%m/%Y') }} - PSA: {{ test.total_psa }} ng/mL
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-plus"></i> Thông tin lịch hẹn</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.appointment_date.label(class="form-label") }}
+                                {{ form.appointment_date(class="form-control" + (" is-invalid" if form.appointment_date.errors else "")) }}
+                                {% if form.appointment_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.appointment_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.appointment_type.label(class="form-label") }}
+                                {{ form.appointment_type(class="form-select" + (" is-invalid" if form.appointment_type.errors else "")) }}
+                                {% if form.appointment_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.appointment_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="3") }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows="4", placeholder="Ghi chú thêm về lịch hẹn...") }}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('patient_appointments', patient_id=patient.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                        
+                        <div>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Actions Based on AI -->
+        {% if ai_recommendations %}
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-magic"></i> Tạo nhanh theo AI</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}">
+                                <input type="hidden" name="recommendation_type" value="bcr_followup">
+                                <input type="hidden" name="prediction_data" value="{{ ai_recommendations | tojson }}">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-calendar-check"></i><br>
+                                    <small>Tái khám BCR</small>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}">
+                                <input type="hidden" name="recommendation_type" value="blood_test">
+                                <input type="hidden" name="prediction_data" value="{{ ai_recommendations | tojson }}">
+                                <button type="submit" class="btn btn-info w-100">
+                                    <i class="fas fa-vial"></i><br>
+                                    <small>Xét nghiệm</small>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}">
+                                <input type="hidden" name="recommendation_type" value="adt_monitoring">
+                                <input type="hidden" name="prediction_data" value="{{ ai_recommendations | tojson }}">
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="fas fa-pills"></i><br>
+                                    <small>Theo dõi ADT</small>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-populate form based on AI recommendations
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any JavaScript for smart form filling
+    const appointmentTypeSelect = document.getElementById('appointment_type');
+    const descriptionTextarea = document.getElementById('description');
+    
+    appointmentTypeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        let suggestedDescription = '';
+        
+        switch(selectedType) {
+            case 'Tái khám':
+                suggestedDescription = 'Tái khám định kỳ theo dõi tình trạng bệnh nhân';
+                break;
+            case 'Xét nghiệm':
+                suggestedDescription = 'Xét nghiệm PSA và các chỉ số liên quan';
+                break;
+            case 'Tư vấn':
+                suggestedDescription = 'Tư vấn về tình trạng bệnh và phương pháp điều trị';
+                break;
+        }
+        
+        if (suggestedDescription && !descriptionTextarea.value) {
+            descriptionTextarea.value = suggestedDescription;
+        }
+    });
+});
+</script>
+{% endblock %}

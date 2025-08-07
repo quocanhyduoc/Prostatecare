@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.dashboard }} - Hệ thống quản lý bệnh nhân ung thư tuyến tiền liệt{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="page-title">
+            <i class="fas fa-tachometer-alt me-2"></i>{{ t.dashboard }}
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-muted mb-1">{{ t.total_patients }}</h5>
+                        <h2 class="card-text mb-0">{{ total_patients }}</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-muted mb-1">{{ t.active_treatments }}</h5>
+                        <h2 class="card-text mb-0">{{ active_treatments }}</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-muted mb-1">{{ t.recent_blood_tests }}</h5>
+                        <h2 class="card-text mb-0">{{ recent_blood_tests }}</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-vial"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-muted mb-1">{{ t.urgent_events }}</h5>
+                        <h2 class="card-text mb-0">{{ urgent_events }}</h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Patients -->
+    <div class="col-lg-8 mb-4">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>{{ t.recent_patients }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_patients %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ t.patient_code }}</th>
+                                    <th>{{ t.full_name }}</th>
+                                    <th>{{ t.age }}</th>
+                                    <th>{{ t.diagnosis_date }}</th>
+                                    <th>{{ t.actions }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in recent_patients %}
+                                <tr>
+                                    <td><strong>{{ patient.patient_code }}</strong></td>
+                                    <td>{{ patient.full_name }}</td>
+                                    <td>{{ patient.age }}</td>
+                                    <td>{{ patient.diagnosis_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>{{ t.view }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <p>{{ t.no_data }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Important Events -->
+    <div class="col-lg-4 mb-4">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bell me-2"></i>{{ t.important_events }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if important_events %}
+                    {% for event in important_events %}
+                    <div class="event-item mb-3 p-2 rounded border-start border-3 
+                         {% if event.priority == 'URGENT' %}border-danger bg-danger-subtle
+                         {% elif event.priority == 'HIGH' %}border-warning bg-warning-subtle
+                         {% else %}border-info bg-info-subtle{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ event.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>{{ event.event_date.strftime('%d/%m/%Y') }}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>{{ event.patient.full_name }}
+                                </small>
+                            </div>
+                            <span class="badge bg-{% if event.priority == 'URGENT' %}danger{% elif event.priority == 'HIGH' %}warning{% else %}info{% endif %}">
+                                {{ t[event.priority] }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-bell fa-3x mb-3"></i>
+                        <p>{{ t.no_data }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Appointments and Medication Notifications -->
+<div class="row">
+    <!-- Upcoming Appointments This Week -->
+    <div class="col-lg-8 mb-4">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-check me-2"></i>Lịch hẹn tuần tới
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Bệnh nhân</th>
+                                    <th>Ngày hẹn</th>
+                                    <th>Loại</th>
+                                    <th>Mục đích</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in upcoming_appointments %}
+                                <tr class="{% if appointment.appointment_date == today %}table-warning{% elif appointment.needs_reminder %}table-info{% endif %}">
+                                    <td>
+                                        <strong>{{ appointment.patient.full_name }}</strong>
+                                        <br><small class="text-muted">{{ appointment.patient.patient_code }}</small>
+                                    </td>
+                                    <td>
+                                        {{ appointment.appointment_date.strftime('%d/%m/%Y') }}
+                                        {% if appointment.appointment_time %}
+                                            <br><small>{{ appointment.appointment_time.strftime('%H:%M') }}</small>
+                                        {% endif %}
+                                        {% if appointment.needs_reminder %}
+                                            <span class="badge bg-warning ms-2">Nhắc nhở</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if appointment.appointment_type == 'MEDICATION' %}
+                                            <span class="badge bg-primary">Sử dụng thuốc</span>
+                                        {% elif appointment.appointment_type == 'FOLLOW_UP' %}
+                                            <span class="badge bg-success">Tái khám</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Tư vấn</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ appointment.purpose or 'Không có' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('patient_detail', patient_id=appointment.patient_id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                        <p>Không có lịch hẹn nào trong tuần tới</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Medications Due Soon -->
+    <div class="col-lg-4 mb-4">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-pills me-2"></i>Thuốc sắp đến hạn
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if medications_due_soon %}
+                    {% for schedule in medications_due_soon %}
+                    <div class="medication-item mb-3 p-3 rounded border-start border-3 
+                         {% if schedule.is_overdue %}border-danger bg-danger-subtle
+                         {% else %}border-warning bg-warning-subtle{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ schedule.medication.drug_name }}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>{{ schedule.patient.full_name }}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>{{ schedule.scheduled_date.strftime('%d/%m/%Y') }}
+                                </small>
+                                {% if schedule.medication.dosage %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-prescription-bottle me-1"></i>{{ schedule.medication.dosage }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                {% if schedule.is_overdue %}
+                                    <span class="badge bg-danger mb-1">Quá hạn</span>
+                                {% else %}
+                                    <span class="badge bg-warning mb-1">Sắp đến</span>
+                                {% endif %}
+                                <br>
+                                <a href="{{ url_for('patient_detail', patient_id=schedule.patient_id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-pills fa-3x mb-3"></i>
+                        <p>Không có thuốc nào sắp đến hạn</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

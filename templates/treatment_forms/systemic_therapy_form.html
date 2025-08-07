@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Patient Header -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-md me-2"></i>
+                        Bệnh nhân: {{ patient.full_name }}
+                        <span class="badge bg-light text-primary ms-2">{{ patient.patient_code }}</span>
+                    </h5>
+                </div>
+            </div>
+
+            <!-- Systemic Therapy Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-syringe me-2"></i>
+                        {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="row g-3">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.treatment_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.treatment_name(class="form-control") }}
+                            {% if form.treatment_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.treatment_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.start_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.start_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.end_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.end_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.status.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        
+                        <!-- Systemic Therapy Specific Fields -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                <i class="fas fa-pills me-2"></i>Chi tiết liệu pháp toàn thân
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.therapy_class.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.therapy_class(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.agent_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.agent_name(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.mechanism_of_action.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.mechanism_of_action(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.dosing_schedule.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.dosing_schedule(class="form-control") }}
+                        </div>
+                        
+                        <!-- Treatment Details -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Chi tiết điều trị
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.treatment_cycles.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.treatment_cycles(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.duration_months.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.duration_months(class="form-control") }}
+                                <span class="input-group-text">tháng</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.administration_route.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.administration_route(class="form-select") }}
+                        </div>
+                        
+                        <!-- Response and Efficacy -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                <i class="fas fa-chart-line me-2"></i>Đáp ứng và hiệu quả
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.clinical_response.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.clinical_response(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.imaging_response.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.imaging_response(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.psa_decline_50.label(class="form-label text-dark fw-semibold") }}
+                            <div class="form-check">
+                                {{ form.psa_decline_50(class="form-check-input") }}
+                                <label class="form-check-label text-dark">
+                                    PSA giảm ≥50%
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.progression_free_survival.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.progression_free_survival(class="form-control") }}
+                                <span class="input-group-text">tháng</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.time_to_progression.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.time_to_progression(class="form-control") }}
+                                <span class="input-group-text">tháng</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Safety and Tolerability -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                <i class="fas fa-shield-alt me-2"></i>An toàn và dung nạp
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.adverse_events.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.adverse_events(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.dose_modifications_required(class="form-check-input") }}
+                                {{ form.dose_modifications_required.label(class="form-check-label text-dark") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.tolerability_assessment.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.tolerability_assessment(class="form-select") }}
+                        </div>
+                        
+                        <!-- Biomarkers and Monitoring -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                <i class="fas fa-dna me-2"></i>Sinh chỉ và theo dõi
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.biomarker_testing.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.biomarker_testing(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.companion_diagnostics.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.companion_diagnostics(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.monitoring_parameters.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.monitoring_parameters(class="form-control", rows="2") }}
+                            <div class="form-text">Các thông số cần theo dõi định kỳ</div>
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                <i class="fas fa-clipboard-list me-2"></i>Thông tin bổ sung
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.notes.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="col-12 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-secondary">
+                                    <i class="fas fa-save me-2"></i>Lưu thông tin
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Systemic therapy form enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Set max date to today for therapy dates
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    
+    dateInputs.forEach(function(input) {
+        if (input.name === 'start_date' || input.name === 'end_date') {
+            input.max = today;
+        }
+    });
+    
+    // Auto-calculate treatment duration from start and end dates
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const durationMonths = document.getElementById('duration_months');
+    
+    if (startDate && endDate && durationMonths) {
+        function calculateDuration() {
+            if (startDate.value && endDate.value) {
+                const start = new Date(startDate.value);
+                const end = new Date(endDate.value);
+                const diffTime = Math.abs(end - start);
+                const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44));
+                durationMonths.value = diffMonths;
+            }
+        }
+        
+        startDate.addEventListener('change', calculateDuration);
+        endDate.addEventListener('change', calculateDuration);
+    }
+    
+    // Validate survival times
+    const pfs = document.getElementById('progression_free_survival');
+    const ttp = document.getElementById('time_to_progression');
+    
+    if (pfs && ttp) {
+        function validateSurvivalTimes() {
+            const pfsValue = parseFloat(pfs.value) || 0;
+            const ttpValue = parseFloat(ttp.value) || 0;
+            
+            if (pfsValue > 0 && ttpValue > 0 && pfsValue > ttpValue) {
+                pfs.setCustomValidity('Thời gian sống không tiến triển thường không được dài hơn thời gian tiến triển');
+            } else {
+                pfs.setCustomValidity('');
+            }
+        }
+        
+        pfs.addEventListener('input', validateSurvivalTimes);
+        ttp.addEventListener('input', validateSurvivalTimes);
+    }
+    
+    // Update form fields based on therapy class selection
+    const therapyClass = document.getElementById('therapy_class');
+    const mechanismField = document.getElementById('mechanism_of_action');
+    
+    if (therapyClass && mechanismField) {
+        const mechanismSuggestions = {
+            'IMMUNOTHERAPY': 'Ức chế checkpoint miễn dịch (PD-1/PD-L1, CTLA-4)',
+            'TARGETED_THERAPY': 'Ức chế kinase, kháng thể đơn dòng',
+            'RADIOPHARMACEUTICAL': 'Đồng vị phóng xạ nhắm mục tiêu',
+            'BONE_TARGETED': 'Ức chế osteclast, điều chỉnh chuyển hóa xương',
+            'EXPERIMENTAL': 'Cơ chế mới, đang nghiên cứu'
+        };
+        
+        therapyClass.addEventListener('change', function() {
+            const suggestion = mechanismSuggestions[this.value];
+            if (suggestion && !mechanismField.value) {
+                mechanismField.value = suggestion;
+            }
+        });
+    }
+    
+    // Enable/disable dose modification details based on checkbox
+    const doseModRequired = document.getElementById('dose_modifications_required');
+    const tolerabilityAssessment = document.getElementById('tolerability_assessment');
+    
+    if (doseModRequired && tolerabilityAssessment) {
+        function toggleTolerabilityFields() {
+            if (doseModRequired.checked) {
+                tolerabilityAssessment.style.backgroundColor = '#fff3cd';
+            } else {
+                tolerabilityAssessment.style.backgroundColor = '';
+            }
+        }
+        
+        doseModRequired.addEventListener('change', toggleTolerabilityFields);
+        // Initialize on page load
+        toggleTolerabilityFields();
+    }
+});
+</script>
+{% endblock %}

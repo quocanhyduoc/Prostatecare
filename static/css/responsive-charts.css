@@ -1,0 +1,277 @@
+/* Responsive Charts CSS */
+
+.chart-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.chart-header {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.chart-title {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.chart-controls .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.chart-controls .btn:hover {
+    transform: translateY(-1px);
+}
+
+.chart-wrapper {
+    height: 300px;
+    position: relative;
+    background: #fafafa;
+    border-radius: 6px;
+    padding: 0.5rem;
+}
+
+.blood-test-chart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .chart-container {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-title {
+        font-size: 1rem;
+    }
+    
+    .chart-wrapper {
+        height: 250px;
+        padding: 0.25rem;
+    }
+    
+    .chart-controls {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .chart-controls .btn {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .chart-container {
+        padding: 0.5rem;
+        border-radius: 6px;
+    }
+    
+    .chart-title {
+        font-size: 0.95rem;
+    }
+    
+    .chart-wrapper {
+        height: 220px;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start !important;
+    }
+    
+    .chart-controls {
+        align-self: flex-end;
+    }
+}
+
+/* Fullscreen mode */
+.chart-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: #fff;
+    margin: 0;
+    border-radius: 0;
+    padding: 1rem;
+    box-shadow: none;
+}
+
+.chart-fullscreen .chart-wrapper {
+    height: calc(100vh - 100px);
+}
+
+.chart-fullscreen .chart-controls .btn .fa-expand:before {
+    content: "\f066"; /* fa-compress */
+}
+
+/* Loading state */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.chart-loading i {
+    margin-right: 0.5rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* No data state */
+.chart-no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #6c757d;
+    text-align: center;
+}
+
+.chart-no-data i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.chart-no-data p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Chart legend customization */
+.chart-container .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.chart-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+/* Interactive elements */
+.chart-interactive-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.chart-tooltip-custom {
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+}
+
+/* Blood test specific styling */
+.psa-chart-container {
+    border-left: 4px solid #28a745;
+}
+
+.testosterone-chart-container {
+    border-left: 4px solid #007bff;
+}
+
+.overview-chart-container {
+    border-left: 4px solid #6f42c1;
+}
+
+/* Chart grid and axes */
+.chart-wrapper canvas {
+    border-radius: 4px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .chart-container {
+        border: 2px solid #000;
+    }
+    
+    .chart-title {
+        color: #000;
+        font-weight: 700;
+    }
+    
+    .chart-wrapper {
+        background: #fff;
+        border: 1px solid #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .chart-container,
+    .chart-controls .btn {
+        transition: none;
+    }
+    
+    .chart-loading i {
+        animation: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .chart-container {
+        box-shadow: none;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+    }
+    
+    .chart-controls {
+        display: none;
+    }
+    
+    .chart-wrapper {
+        height: 300px;
+        background: #fff;
+    }
+}

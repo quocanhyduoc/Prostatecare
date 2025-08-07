@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Quản lý bệnh nhân ung thư tuyến tiền liệt{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">{{ t.dashboard }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('patient_detail', patient_id=medication.treatment.patient_id) }}">{{ medication.treatment.patient.full_name }}</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card medical-card">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-plus me-2"></i>{{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Medication Info -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-pills me-2"></i>Thông tin thuốc</h6>
+                        <p class="mb-1"><strong>Tên thuốc:</strong> {{ medication.drug_name }}</p>
+                        <p class="mb-1"><strong>Liều lượng:</strong> {{ medication.dosage or 'Không có' }}</p>
+                        <p class="mb-0"><strong>Tần suất:</strong> {{ medication.frequency or 'Không có' }}</p>
+                    </div>
+
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.scheduled_date.label(class="form-label") }}
+                                {{ form.scheduled_date(class="form-control" + (" is-invalid" if form.scheduled_date.errors else "")) }}
+                                {% if form.scheduled_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.scheduled_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.administered_date.label(class="form-label") }}
+                                {{ form.administered_date(class="form-control" + (" is-invalid" if form.administered_date.errors else "")) }}
+                                {% if form.administered_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.administered_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.status.label(class="form-label") }}
+                                {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.dosage_given.label(class="form-label") }}
+                                {{ form.dosage_given(class="form-control" + (" is-invalid" if form.dosage_given.errors else "")) }}
+                                {% if form.dosage_given.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.dosage_given.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="postpone-reason-group" style="display: none;">
+                            {{ form.postpone_reason.label(class="form-label") }}
+                            {{ form.postpone_reason(class="form-control", rows="3") }}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.administration_notes.label(class="form-label") }}
+                            {{ form.administration_notes(class="form-control", rows="4") }}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('patient_detail', patient_id=medication.treatment.patient_id) }}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>{{ t.back }}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{{ t.save }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card medical-card">
+                <div class="card-header medical-card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Hướng dẫn
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-light">
+                        <h6 class="alert-heading">Trạng thái lịch trình:</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><span class="badge bg-warning me-2">Chờ xử lý</span> Chưa thực hiện</li>
+                            <li><span class="badge bg-success me-2">Đã xử lý</span> Đã hoàn thành</li>
+                            <li><span class="badge bg-danger me-2">Hoãn</span> Tạm hoãn thực hiện</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Lưu ý quan trọng:</h6>
+                        <ul class="mb-0">
+                            <li>Ngày dự kiến là bắt buộc</li>
+                            <li>Khi hoãn, cần ghi rõ lý do</li>
+                            <li>Ghi chú chi tiết giúp theo dõi tốt hơn</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.getElementById('status');
+    const postponeReasonGroup = document.getElementById('postpone-reason-group');
+    
+    function togglePostponeReason() {
+        if (statusSelect.value === 'POSTPONED') {
+            postponeReasonGroup.style.display = 'block';
+        } else {
+            postponeReasonGroup.style.display = 'none';
+        }
+    }
+    
+    statusSelect.addEventListener('change', togglePostponeReason);
+    togglePostponeReason(); // Initial check
+});
+</script>
+{% endblock %}

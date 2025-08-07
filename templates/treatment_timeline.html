@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Dòng thời gian điều trị - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Patient Header -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-md me-2"></i>
+                        Bệnh nhân: {{ patient.full_name }}
+                        <span class="badge bg-light text-primary ms-2">{{ patient.patient_code }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Ngày sinh:</strong><br>
+                            {{ patient.date_of_birth.strftime('%d/%m/%Y') if patient.date_of_birth }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Ngày chẩn đoán:</strong><br>
+                            {{ patient.diagnosis_date.strftime('%d/%m/%Y') if patient.diagnosis_date }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>PSA ban đầu:</strong><br>
+                            {{ patient.initial_psa }} ng/mL
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Điểm Gleason:</strong><br>
+                            {{ patient.gleason_score }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treatment Timeline -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-timeline me-2"></i>
+                        Dòng thời gian điều trị toàn diện
+                    </h5>
+                    <div class="btn-group">
+                        <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                           class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if treatment_timeline %}
+                        <div class="timeline">
+                            {% for event_data in treatment_timeline %}
+                                {% set event = event_data.event %}
+                                {% set event_type = event_data.type %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker 
+                                        {% if event_type == 'SURGERY' %}bg-success
+                                        {% elif event_type == 'RADIATION' %}bg-warning
+                                        {% elif event_type == 'HORMONE_THERAPY' %}bg-info
+                                        {% elif event_type == 'CHEMOTHERAPY' %}bg-danger
+                                        {% elif event_type == 'SYSTEMIC_THERAPY' %}bg-secondary
+                                        {% endif %}">
+                                        {% if event_type == 'SURGERY' %}<i class="fas fa-scalpel"></i>
+                                        {% elif event_type == 'RADIATION' %}<i class="fas fa-radiation"></i>
+                                        {% elif event_type == 'HORMONE_THERAPY' %}<i class="fas fa-pills"></i>
+                                        {% elif event_type == 'CHEMOTHERAPY' %}<i class="fas fa-flask"></i>
+                                        {% elif event_type == 'SYSTEMIC_THERAPY' %}<i class="fas fa-syringe"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header 
+                                                {% if event_type == 'SURGERY' %}bg-success text-white
+                                                {% elif event_type == 'RADIATION' %}bg-warning text-dark
+                                                {% elif event_type == 'HORMONE_THERAPY' %}bg-info text-white
+                                                {% elif event_type == 'CHEMOTHERAPY' %}bg-danger text-white
+                                                {% elif event_type == 'SYSTEMIC_THERAPY' %}bg-secondary text-white
+                                                {% endif %}">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">
+                                                        {% if event_type == 'SURGERY' %}Phẫu thuật
+                                                        {% elif event_type == 'RADIATION' %}Xạ trị
+                                                        {% elif event_type == 'HORMONE_THERAPY' %}Liệu pháp nội tiết
+                                                        {% elif event_type == 'CHEMOTHERAPY' %}Hóa trị
+                                                        {% elif event_type == 'SYSTEMIC_THERAPY' %}Liệu pháp toàn thân
+                                                        {% endif %}
+                                                        - {{ event.treatment_name }}
+                                                    </h6>
+                                                    <span class="badge 
+                                                        {% if event.status == 'ACTIVE' %}bg-success
+                                                        {% elif event.status == 'COMPLETED' %}bg-primary
+                                                        {% elif event.status == 'PLANNED' %}bg-warning
+                                                        {% elif event.status == 'DISCONTINUED' %}bg-danger
+                                                        {% else %}bg-secondary
+                                                        {% endif %}">
+                                                        {% if event.status == 'ACTIVE' %}Đang điều trị
+                                                        {% elif event.status == 'COMPLETED' %}Hoàn thành
+                                                        {% elif event.status == 'PLANNED' %}Dự định
+                                                        {% elif event.status == 'DISCONTINUED' %}Đã dừng
+                                                        {% else %}{{ event.status }}
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p class="mb-2">
+                                                            <strong>Ngày bắt đầu:</strong> 
+                                                            {{ event.start_date.strftime('%d/%m/%Y') if event.start_date }}
+                                                        </p>
+                                                        {% if event.end_date %}
+                                                            <p class="mb-2">
+                                                                <strong>Ngày kết thúc:</strong> 
+                                                                {{ event.end_date.strftime('%d/%m/%Y') }}
+                                                            </p>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <!-- Specific details based on treatment type -->
+                                                        {% if event_type == 'SURGERY' and event.surgery_method %}
+                                                            <p class="mb-2">
+                                                                <strong>Phương pháp:</strong> 
+                                                                {% if event.surgery_method == 'OPEN' %}Mở
+                                                                {% elif event.surgery_method == 'LAPAROSCOPIC' %}Nội soi
+                                                                {% elif event.surgery_method == 'ROBOTIC' %}Robot
+                                                                {% else %}{{ event.surgery_method }}
+                                                                {% endif %}
+                                                            </p>
+                                                        {% endif %}
+                                                        
+                                                        {% if event_type == 'RADIATION' and event.total_dose %}
+                                                            <p class="mb-2">
+                                                                <strong>Tổng liều:</strong> {{ event.total_dose }} Gy
+                                                            </p>
+                                                        {% endif %}
+                                                        
+                                                        {% if event_type == 'HORMONE_THERAPY' and event.drug_name %}
+                                                            <p class="mb-2">
+                                                                <strong>Thuốc:</strong> {{ event.drug_name }}
+                                                            </p>
+                                                        {% endif %}
+                                                        
+                                                        {% if event_type == 'CHEMOTHERAPY' and event.protocol_name %}
+                                                            <p class="mb-2">
+                                                                <strong>Phác đồ:</strong> {{ event.protocol_name }}
+                                                            </p>
+                                                        {% endif %}
+                                                        
+                                                        {% if event_type == 'SYSTEMIC_THERAPY' and event.agent_name %}
+                                                            <p class="mb-2">
+                                                                <strong>Tác nhân:</strong> {{ event.agent_name }}
+                                                            </p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if event.notes %}
+                                                    <div class="mt-3">
+                                                        <strong>Ghi chú:</strong>
+                                                        <p class="text-muted mb-0">{{ event.notes }}</p>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <!-- Action buttons -->
+                                                <div class="mt-3 d-flex gap-2">
+                                                    {% if event_type == 'SURGERY' %}
+                                                        <a href="{{ url_for('edit_surgery_event', surgery_id=event.id) }}" 
+                                                           class="btn btn-sm btn-outline-success">
+                                                            <i class="fas fa-edit me-1"></i>Sửa
+                                                        </a>
+                                                    {% elif event_type == 'RADIATION' %}
+                                                        <a href="{{ url_for('edit_radiation_event', radiation_id=event.id) }}" 
+                                                           class="btn btn-sm btn-outline-warning">
+                                                            <i class="fas fa-edit me-1"></i>Sửa
+                                                        </a>     
+                                                    {% elif event_type == 'HORMONE_THERAPY' %}
+                                                        <a href="{{ url_for('edit_hormone_therapy_event', hormone_therapy_id=event.id) }}" 
+                                                           class="btn btn-sm btn-outline-info">
+                                                            <i class="fas fa-edit me-1"></i>Sửa
+                                                        </a>
+                                                    {% elif event_type == 'CHEMOTHERAPY' %}
+                                                        <a href="{{ url_for('edit_chemotherapy_event', chemotherapy_id=event.id) }}" 
+                                                           class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-edit me-1"></i>Sửa
+                                                        </a>
+                                                    {% elif event_type == 'SYSTEMIC_THERAPY' %}
+                                                        <a href="{{ url_for('edit_systemic_therapy_event', systemic_therapy_id=event.id) }}" 
+                                                           class="btn btn-sm btn-outline-secondary">
+                                                            <i class="fas fa-edit me-1"></i>Sửa
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Chưa có thông tin điều trị</h5>
+                            <p class="text-muted">Bắt đầu thêm thông tin điều trị cho bệnh nhân này.</p>
+                            <div class="mt-4">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('add_surgery_event', patient_id=patient.id) }}" 
+                                       class="btn btn-success">
+                                        <i class="fas fa-scalpel me-2"></i>Thêm phẫu thuật
+                                    </a>
+                                    <a href="{{ url_for('add_radiation_event', patient_id=patient.id) }}" 
+                                       class="btn btn-warning">
+                                        <i class="fas fa-radiation me-2"></i>Thêm xạ trị
+                                    </a>
+                                    <a href="{{ url_for('add_hormone_therapy_event', patient_id=patient.id) }}" 
+                                       class="btn btn-info">
+                                        <i class="fas fa-pills me-2"></i>Thêm ADT
+                                    </a>
+                                    <a href="{{ url_for('add_chemotherapy_event', patient_id=patient.id) }}" 
+                                       class="btn btn-danger">
+                                        <i class="fas fa-flask me-2"></i>Thêm hóa trị
+                                    </a>
+                                    <a href="{{ url_for('add_systemic_therapy_event', patient_id=patient.id) }}" 
+                                       class="btn btn-secondary">
+                                        <i class="fas fa-syringe me-2"></i>Thêm liệu pháp toàn thân
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 15px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    border: 3px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 2;
+}
+
+.timeline-content {
+    margin-left: 20px;
+}
+
+.timeline-item:last-child .timeline-marker::after {
+    display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .timeline {
+        padding-left: 15px;
+    }
+    
+    .timeline-marker {
+        left: -15px;
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+    
+    .timeline-content {
+        margin-left: 15px;
+    }
+    
+    .timeline::before {
+        left: 0;
+    }
+}
+
+/* Status badge enhancements */
+.badge {
+    font-size: 0.75em;
+    letter-spacing: 0.02em;
+}
+
+/* Card hover effects */
+.timeline-content .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.timeline-content .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth scrolling to timeline items
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    
+    // Animate timeline items on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateX(0)';
+            }
+        });
+    }, observerOptions);
+    
+    timelineItems.forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(-20px)';
+        item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(item);
+    });
+    
+    // Add quick navigation to specific treatment types
+    const urlParams = new URLSearchParams(window.location.search);
+    const scrollTo = urlParams.get('scroll_to');
+    
+    if (scrollTo) {
+        const targetElement = document.querySelector(`[data-treatment-type="${scrollTo}"]`);
+        if (targetElement) {
+            setTimeout(() => {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500);
+        }
+    }
+});
+</script>
+{% endblock %}

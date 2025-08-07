@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Nhập xét nghiệm máu từ Excel - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-file-excel me-2"></i>Nhập xét nghiệm máu từ Excel
+                </h1>
+                <p class="text-muted mb-0">{{ patient.full_name }} ({{ patient.patient_code }})</p>
+            </div>
+            <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>{{ t.back }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Instructions -->
+        <div class="card medical-card mb-4">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Hướng dẫn nhập dữ liệu
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Định dạng file Excel yêu cầu:</strong></p>
+                <ul>
+                    <li>File có định dạng .xlsx hoặc .xls</li>
+                    <li>Dòng đầu tiên phải chứa các tiêu đề cột sau (chính xác):</li>
+                </ul>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ngày xét nghiệm</th>
+                                <th>FREE PSA (ng/mL)</th>
+                                <th>TOTAL PSA (ng/mL)</th>
+                                <th>Testosterone (ng/dL)</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-light">
+                                <td>01/01/2024</td>
+                                <td>0.5</td>
+                                <td>4.2</td>
+                                <td>350</td>
+                                <td>Xét nghiệm định kỳ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Lưu ý:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Ngày xét nghiệm phải có định dạng dd/mm/yyyy</li>
+                        <li>Các cột số có thể để trống nếu không có dữ liệu</li>
+                        <li>Hệ thống sẽ tự động tính tỷ lệ PSA</li>
+                        <li>Không nhập trùng ngày xét nghiệm cho cùng một bệnh nhân</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center">
+                    <a href="{{ url_for('export_blood_tests', patient_id=patient.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-1"></i>Tải mẫu Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload Form -->
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Tải lên file Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">
+                            Chọn file Excel <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".xlsx,.xls" required>
+                        <div class="form-text">
+                            Chấp nhận file .xlsx và .xls (tối đa 10MB)
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>{{ t.cancel }}
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i>Nhập dữ liệu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Chẩn đoán hình ảnh - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-x-ray me-2"></i>Chẩn đoán hình ảnh
+                </h1>
+                <p class="text-muted mb-0">{{ patient.full_name }} ({{ patient.patient_code }})</p>
+            </div>
+            <div>
+                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left me-1"></i>{{ t.back }}
+                </a>
+                <a href="{{ url_for('imaging_new', patient_id=patient.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Thêm chẩn đoán
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card medical-card">
+            <div class="card-body">
+                {% if imaging_records.items %}
+                    <div class="row">
+                        {% for imaging in imaging_records.items %}
+                        <div class="col-lg-6 mb-4">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-images me-2"></i>{{ t[imaging.imaging_type] }} - {{ imaging.imaging_date.strftime('%d/%m/%Y') }}
+                                        </h6>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('imaging_edit', imaging_id=imaging.id) }}" 
+                                               class="btn btn-sm btn-outline-light" title="{{ t.edit }}">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-light" 
+                                                    title="{{ t.delete }}" 
+                                                    onclick="confirmDelete('{{ imaging.id }}', '{{ imaging.imaging_type }} - {{ imaging.imaging_date.strftime('%d/%m/%Y') }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted">Loại chẩn đoán:</small>
+                                            <div><strong>{{ t[imaging.imaging_type] }}</strong></div>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Ngày thực hiện:</small>
+                                            <div><strong>{{ imaging.imaging_date.strftime('%d/%m/%Y') }}</strong></div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if imaging.radiologist %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">Bác sĩ đọc phim:</small>
+                                        <div><strong>{{ imaging.radiologist }}</strong></div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if imaging.contrast_used %}
+                                    <div class="mb-3">
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-check me-1"></i>Có sử dụng thuốc cản quang
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if imaging.findings %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">Kết quả:</small>
+                                        <div class="border-start border-3 border-info ps-3 mt-1">
+                                            {{ imaging.findings }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if imaging.impression %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">Kết luận:</small>
+                                        <div class="border-start border-3 border-success ps-3 mt-1">
+                                            <strong>{{ imaging.impression }}</strong>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>{{ imaging.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if imaging_records.pages > 1 %}
+                    <nav aria-label="Imaging pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if imaging_records.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('imaging_list', patient_id=patient.id, page=imaging_records.prev_num) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in imaging_records.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != imaging_records.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('imaging_list', patient_id=patient.id, page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if imaging_records.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('imaging_list', patient_id=patient.id, page=imaging_records.next_num) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-x-ray fa-4x mb-3"></i>
+                        <h4>Chưa có chẩn đoán hình ảnh</h4>
+                        <p>Chưa có kết quả chẩn đoán hình ảnh nào được thêm cho bệnh nhân này</p>
+                        <a href="{{ url_for('imaging_new', patient_id=patient.id) }}" class="btn btn-primary mt-3">
+                            <i class="fas fa-plus me-1"></i>Thêm chẩn đoán hình ảnh
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa chẩn đoán hình ảnh <strong id="deleteTitle"></strong>?</p>
+                <p class="text-danger"><strong>Lưu ý:</strong> Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>{{ t.delete }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete(imagingId, title) {
+    document.getElementById('deleteTitle').textContent = title;
+    document.getElementById('deleteForm').action = '/imaging/' + imagingId + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Patient Header -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-md me-2"></i>
+                        Bệnh nhân: {{ patient.full_name }}
+                        <span class="badge bg-light text-primary ms-2">{{ patient.patient_code }}</span>
+                    </h5>
+                </div>
+            </div>
+
+            <!-- Radiation Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-radiation me-2"></i>
+                        {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="row g-3">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h6 class="text-warning border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.treatment_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.treatment_name(class="form-control") }}
+                            {% if form.treatment_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.treatment_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.start_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.start_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.end_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.end_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.status.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        
+                        <!-- Radiation Specific Fields -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-warning border-bottom pb-2 mb-3">
+                                <i class="fas fa-radiation-alt me-2"></i>Chi tiết xạ trị
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.radiation_type.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.radiation_type(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.technique.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.technique(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.total_dose.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.total_dose(class="form-control") }}
+                                <span class="input-group-text">Gy</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.fractions.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.fractions(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.dose_per_fraction.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.dose_per_fraction(class="form-control") }}
+                                <span class="input-group-text">Gy</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Treatment Areas -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-warning border-bottom pb-2 mb-3">
+                                <i class="fas fa-crosshairs me-2"></i>Vùng điều trị
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.treatment_areas.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.treatment_areas(class="form-control", rows="3") }}
+                            <div class="form-text">Mô tả chi tiết các vùng được chiếu xạ</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.planning_system.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.planning_system(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.machine_type.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.machine_type(class="form-control") }}
+                        </div>
+                        
+                        <!-- Side Effects and Toxicity -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-warning border-bottom pb-2 mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Tác dụng phụ
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.acute_toxicity.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.acute_toxicity(class="form-control", rows="3") }}
+                            <div class="form-text">Tác dụng phụ cấp tính (trong vòng 90 ngày)</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.late_toxicity.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.late_toxicity(class="form-control", rows="3") }}
+                            <div class="form-text">Tác dụng phụ muộn (sau 90 ngày)</div>
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-warning border-bottom pb-2 mb-3">
+                                <i class="fas fa-clipboard-list me-2"></i>Thông tin bổ sung
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.notes.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="col-12 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-save me-2"></i>Lưu thông tin
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Radiation therapy form enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Set max date to today for radiation dates
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    
+    dateInputs.forEach(function(input) {
+        if (input.name === 'start_date' || input.name === 'end_date') {
+            input.max = today;
+        }
+    });
+    
+    // Auto-calculate dose per fraction when total dose and fractions are entered
+    const totalDose = document.getElementById('total_dose');
+    const fractions = document.getElementById('fractions');
+    const dosePerFraction = document.getElementById('dose_per_fraction');
+    
+    if (totalDose && fractions && dosePerFraction) {
+        function calculateDosePerFraction() {
+            const total = parseFloat(totalDose.value) || 0;
+            const fractionCount = parseInt(fractions.value) || 0;
+            
+            if (total > 0 && fractionCount > 0) {
+                const dosePerFrac = (total / fractionCount).toFixed(2);
+                dosePerFraction.value = dosePerFrac;
+            }
+        }
+        
+        totalDose.addEventListener('input', calculateDosePerFraction);
+        fractions.addEventListener('input', calculateDosePerFraction);
+    }
+    
+    // Validate reasonable dose limits
+    if (totalDose) {
+        totalDose.addEventListener('input', function() {
+            const dose = parseFloat(this.value) || 0;
+            if (dose > 100) {
+                this.setCustomValidity('Liều xạ trị có vẻ quá cao. Vui lòng kiểm tra lại.');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

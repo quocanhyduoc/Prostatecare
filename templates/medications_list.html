@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Thuốc điều trị - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-pills me-2"></i>Thuốc điều trị
+                </h1>
+                <p class="text-muted mb-0">{{ patient.full_name }} ({{ patient.patient_code }})</p>
+            </div>
+            <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>{{ t.back }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if treatments %}
+            {% for treatment in treatments %}
+            <div class="card medical-card mb-4 {% if treatment.is_active %}border-success{% endif %}">
+                <div class="card-header {% if treatment.is_active %}medical-card-header bg-success{% else %}medical-card-header{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-procedures me-2"></i>{{ treatment.treatment_name }}
+                            {% if treatment.is_active %}
+                                <span class="badge bg-light text-success ms-2">Đang điều trị</span>
+                            {% endif %}
+                        </h5>
+                        <div>
+                            <small class="text-white">
+                                {{ treatment.start_date.strftime('%d/%m/%Y') }}
+                                {% if treatment.end_date %} - {{ treatment.end_date.strftime('%d/%m/%Y') }}{% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if treatment.notes %}
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>{{ treatment.notes }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6>Danh sách thuốc</h6>
+                        {% if treatment.is_active %}
+                        <a href="{{ url_for('medication_new', treatment_id=treatment.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i>Thêm thuốc
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    {% if treatment.medications %}
+                        <div class="row">
+                            {% for medication in treatment.medications %}
+                            <div class="col-lg-6 mb-3">
+                                <div class="card {% if medication.is_active %}border-primary{% else %}border-light bg-light{% endif %}">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="card-title mb-1">
+                                                    {{ medication.drug_name }}
+                                                    {% if medication.is_active %}
+                                                        <span class="badge bg-success ms-1">Đang dùng</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary ms-1">Đã dừng</span>
+                                                    {% endif %}
+                                                </h6>
+                                                
+                                                <div class="row g-2 mb-2">
+                                                    {% if medication.dosage %}
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Liều lượng:</small>
+                                                        <div><strong>{{ medication.dosage }}</strong></div>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if medication.frequency %}
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Tần suất:</small>
+                                                        <div><strong>{{ medication.frequency }}</strong></div>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if medication.route %}
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Đường dùng:</small>
+                                                        <div><strong>{{ medication.route }}</strong></div>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Thời gian:</small>
+                                                        <div><strong>{{ medication.start_date.strftime('%d/%m/%Y') }}{% if medication.end_date %} - {{ medication.end_date.strftime('%d/%m/%Y') }}{% endif %}</strong></div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if medication.notes %}
+                                                <div class="mb-2">
+                                                    <small class="text-muted">Ghi chú:</small>
+                                                    <div class="small">{{ medication.notes }}</div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="btn-group-vertical" role="group">
+                                                <a href="{{ url_for('medication_edit', medication_id=medication.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="{{ t.edit }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        title="{{ t.delete }}" 
+                                                        onclick="confirmDelete('{{ medication.id }}', '{{ medication.drug_name }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-capsules fa-3x mb-3"></i>
+                            <p>Chưa có thuốc nào trong phác đồ điều trị này</p>
+                            {% if treatment.is_active %}
+                            <a href="{{ url_for('medication_new', treatment_id=treatment.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Thêm thuốc
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card medical-card">
+                <div class="card-body">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-pills fa-4x mb-3"></i>
+                        <h4>Chưa có phác đồ điều trị</h4>
+                        <p>Chưa có phác đồ điều trị nào được thêm cho bệnh nhân này</p>
+                        <a href="{{ url_for('treatment_new', patient_id=patient.id) }}" class="btn btn-primary mt-3">
+                            <i class="fas fa-plus me-1"></i>Thêm phác đồ điều trị
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa thuốc <strong id="deleteMedicationName"></strong>?</p>
+                <p class="text-danger"><strong>Lưu ý:</strong> Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t.cancel }}</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>{{ t.delete }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete(medicationId, medicationName) {
+    document.getElementById('deleteMedicationName').textContent = medicationName;
+    document.getElementById('deleteForm').action = '/medication/' + medicationId + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

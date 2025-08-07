@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch hẹn - {{ patient.full_name }} - Quản lý bệnh nhân ung thư tuyến tiền liệt{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">{{ t.dashboard }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('patient_detail', patient_id=patient.id) }}">{{ patient.full_name }}</a></li>
+            <li class="breadcrumb-item active">Lịch hẹn</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="fas fa-calendar-check me-2"></i>Lịch hẹn của bệnh nhân
+            </h4>
+            <p class="text-muted mb-0">
+                <strong>{{ patient.full_name }}</strong> ({{ patient.patient_code }})
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('appointment_new', patient_id=patient.id) }}" 
+               class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Tạo lịch hẹn mới
+            </a>
+            <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{{ t.back }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Patient Info Card -->
+    <div class="card medical-card mb-4">
+        <div class="card-header medical-card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-user me-2"></i>Thông tin bệnh nhân
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Mã bệnh nhân:</strong><br>
+                    <span class="text-primary">{{ patient.patient_code }}</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Họ tên:</strong><br>
+                    {{ patient.full_name }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Tuổi:</strong><br>
+                    {{ patient.age }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Ngày chẩn đoán:</strong><br>
+                    {{ patient.diagnosis_date.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments List -->
+    <div class="card medical-card">
+        <div class="card-header medical-card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-list me-2"></i>Danh sách lịch hẹn ({{ appointments|length }} lịch hẹn)
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Ngày hẹn</th>
+                                <th>Giờ hẹn</th>
+                                <th>Loại</th>
+                                <th>Trạng thái</th>
+                                <th>Mục đích</th>
+                                <th>Ghi chú</th>
+                                <th class="text-center">{{ t.actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                            <tr class="{% if appointment.is_today %}table-warning{% elif appointment.is_overdue %}table-danger{% elif appointment.is_upcoming %}table-info{% endif %}">
+                                <td>
+                                    <strong>{{ appointment.appointment_date.strftime('%d/%m/%Y') }}</strong>
+                                    {% if appointment.is_today %}
+                                        <br><small class="text-warning">
+                                            <i class="fas fa-exclamation-circle me-1"></i>Hôm nay
+                                        </small>
+                                    {% elif appointment.is_overdue %}
+                                        <br><small class="text-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn
+                                        </small>
+                                    {% elif appointment.is_upcoming %}
+                                        <br><small class="text-info">
+                                            <i class="fas fa-clock me-1"></i>Sắp tới
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if appointment.appointment_time %}
+                                        {{ appointment.appointment_time.strftime('%H:%M') }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if appointment.appointment_type == 'MEDICATION' %}
+                                        <span class="badge bg-primary">Sử dụng thuốc</span>
+                                    {% elif appointment.appointment_type == 'FOLLOW_UP' %}
+                                        <span class="badge bg-success">Tái khám</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Tư vấn</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if appointment.status == 'SCHEDULED' %}
+                                        <span class="badge bg-secondary">Đã lên lịch</span>
+                                    {% elif appointment.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Đã hoàn thành</span>
+                                    {% elif appointment.status == 'CANCELLED' %}
+                                        <span class="badge bg-danger">Đã hủy</span>
+                                    {% elif appointment.status == 'RESCHEDULED' %}
+                                        <span class="badge bg-warning">Đã dời lịch</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if appointment.purpose %}
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                              title="{{ appointment.purpose }}">
+                                            {{ appointment.purpose }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if appointment.notes %}
+                                        <span class="text-truncate d-inline-block" style="max-width: 150px;" 
+                                              title="{{ appointment.notes }}">
+                                            {{ appointment.notes }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('appointment_edit', appointment_id=appointment.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if appointment.medication_schedule %}
+                                            <a href="{{ url_for('medication_schedule_list', medication_id=appointment.medication_schedule.medication_id) }}" 
+                                               class="btn btn-sm btn-outline-info" title="Xem lịch trình thuốc">
+                                                <i class="fas fa-pills"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Statistics -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-secondary">{{ appointments|selectattr('status', 'equalto', 'SCHEDULED')|list|length }}</h5>
+                            <small class="text-muted">Đã lên lịch</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-success">{{ appointments|selectattr('status', 'equalto', 'COMPLETED')|list|length }}</h5>
+                            <small class="text-muted">Đã hoàn thành</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-danger">{{ appointments|selectattr('status', 'equalto', 'CANCELLED')|list|length }}</h5>
+                            <small class="text-muted">Đã hủy</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-primary">{{ appointments|length }}</h5>
+                            <small class="text-muted">Tổng cộng</small>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                    <h5>Chưa có lịch hẹn nào</h5>
+                    <p>Tạo lịch hẹn đầu tiên cho bệnh nhân này</p>
+                    <a href="{{ url_for('appointment_new', patient_id=patient.id) }}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Tạo lịch hẹn
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

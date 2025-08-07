@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}Dự báo Lợi ích ADT - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-pills text-warning"></i> Dự báo Lợi ích Liệu pháp Nội tiết (ADT)</h2>
+                    <p class="text-muted mb-0">Bệnh nhân: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_code }})</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('ai_predictions_dashboard', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Prediction Form -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Thông tin Điều trị ADT</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.planned_adt_type.label(class="form-label") }}
+                            {{ form.planned_adt_type(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.planned_duration.label(class="form-label") }}
+                            {{ form.planned_duration(class="form-control") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.performance_status.label(class="form-label") }}
+                            {{ form.performance_status(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.quality_of_life_priority.label(class="form-label") }}
+                            {{ form.quality_of_life_priority(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.comorbidities.label(class="form-label") }}
+                            {{ form.comorbidities(class="form-control", rows="3", placeholder="Tiểu đường, tim mạch, loãng xương...") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.current_medications.label(class="form-label") }}
+                            {{ form.current_medications(class="form-control", rows="3", placeholder="Danh sách thuốc hiện tại...") }}
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-warning") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Results -->
+        <div class="col-lg-8">
+            {% if prediction_result %}
+                {% if prediction_result.status == 'success' %}
+                    <!-- Benefit Score Overview -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Kết quả Dự báo Lợi ích ADT</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <div class="mb-3">
+                                        <h1 class="display-3 text-warning font-weight-bold">{{ prediction_result.benefit_score }}</h1>
+                                        <h6 class="text-muted">Điểm lợi ích (0-100)</h6>
+                                    </div>
+                                    <div class="progress mb-2" style="height: 20px;">
+                                        <div class="progress-bar bg-warning" style="width: {{ prediction_result.benefit_score }}%"></div>
+                                    </div>
+                                    <span class="badge bg-{{ 'success' if prediction_result.benefit_category == 'high' else 'warning' }}">
+                                        {% if prediction_result.benefit_category == 'high' %}
+                                            Hưởng lợi cao
+                                        {% else %}
+                                            Hưởng lợi thấp
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        {% if prediction_result.predicted_psa_response %}
+                                            <div class="col-sm-6">
+                                                <div class="text-center p-3 border rounded">
+                                                    <h3 class="text-success">{{ prediction_result.predicted_psa_response }}%</h3>
+                                                    <p class="mb-0 text-muted">Dự kiến giảm PSA</p>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        {% if prediction_result.optimal_duration %}
+                                            <div class="col-sm-6">
+                                                <div class="text-center p-3 border rounded">
+                                                    <h3 class="text-info">{{ prediction_result.optimal_duration }}</h3>
+                                                    <p class="mb-0 text-muted">Tháng điều trị tối ưu</p>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle"></i> Giải thích:</h6>
+                                        <p class="mb-0">{{ prediction_result.explanation }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drug Recommendations -->
+                    {% if prediction_result.drug_recommendations %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-pills"></i> Thuốc Được Khuyến nghị</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for drug in prediction_result.drug_recommendations %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                <span>{{ drug }}</span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Side Effects and Quality of Life -->
+                    <div class="row">
+                        {% if prediction_result.side_effect_risks %}
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-danger text-white">
+                                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Nguy cơ Tác dụng Phụ</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {% for risk in prediction_result.side_effect_risks %}
+                                            <div class="mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>{{ risk.event }}</span>
+                                                    <span class="badge bg-{{ 'danger' if risk.probability == 'high' else 'warning' if risk.probability == 'moderate' else 'success' }}">
+                                                        {{ risk.probability | title }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="fas fa-heart"></i> Chất lượng Cuộc sống</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if prediction_result.quality_of_life_impact %}
+                                        <div class="text-center mb-3">
+                                            <span class="badge fs-6 bg-{{ 'success' if prediction_result.quality_of_life_impact == 'low' else 'warning' if prediction_result.quality_of_life_impact == 'moderate' else 'danger' }}">
+                                                Tác động: {{ prediction_result.quality_of_life_impact | title }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if prediction_result.contraindications %}
+                                        <div class="alert alert-warning alert-sm">
+                                            <strong>Chống chỉ định:</strong>
+                                            <ul class="mb-0 mt-1">
+                                                {% for contra in prediction_result.contraindications %}
+                                                    <li>{{ contra }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monitoring Schedule -->
+                    {% if prediction_result.monitoring_schedule %}
+                        <div class="card mt-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Lịch Theo dõi Được Khuyến nghị</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    {% for schedule in prediction_result.monitoring_schedule %}
+                                        <li class="mb-2">
+                                            <i class="fas fa-calendar-day text-primary me-2"></i>
+                                            {{ schedule }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                
+                                <!-- Action Buttons for ADT Monitoring -->
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}">
+                                            <input type="hidden" name="recommendation_type" value="adt_monitoring">
+                                            <input type="hidden" name="prediction_data" value="{{ prediction_result | tojson }}">
+                                            <input type="hidden" name="next" value="{{ request.url }}">
+                                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                                <i class="fas fa-calendar-plus"></i> Tạo lịch theo dõi ADT
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}">
+                                            <input type="hidden" name="recommendation_type" value="blood_test">
+                                            <input type="hidden" name="prediction_data" value="{{ prediction_result | tojson }}">
+                                            <input type="hidden" name="next" value="{{ request.url }}">
+                                            <button type="submit" class="btn btn-info btn-sm w-100">
+                                                <i class="fas fa-vial"></i> Lên lịch xét nghiệm
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Model Information -->
+                    <div class="card mt-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="fas fa-info"></i> Thông tin Phân tích</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Thời gian phân tích:</strong> {{ prediction_result.prediction_date[:19] | replace('T', ' ') }}
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-warning alert-sm">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Lưu ý:</strong> Kết quả dự báo chỉ mang tính tham khảo và cần được đánh giá bởi bác sĩ chuyên khoa.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <!-- Error Display -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <h5><i class="fas fa-exclamation-circle"></i> Lỗi Phân tích</h5>
+                                <p class="mb-0">{{ prediction_result.message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Initial State -->
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-pills fa-5x text-warning mb-4"></i>
+                        <h4 class="text-muted">Sẵn sàng Phân tích Lợi ích ADT</h4>
+                        <p class="text-muted">
+                            Điền thông tin điều trị ADT dự kiến bên trái và nhấn "Dự báo Lợi ích ADT" để bắt đầu.
+                        </p>
+                        <div class="alert alert-info">
+                            <strong>Dự báo Lợi ích ADT</strong> sử dụng AI để đánh giá khả năng bệnh nhân hưởng lợi từ liệu pháp nội tiết dựa trên:
+                            <ul class="mt-2 mb-0 text-start">
+                                <li>Đặc điểm lâm sàng và mô bệnh học</li>
+                                <li>Tuổi và trạng thái toàn thân</li>
+                                <li>Bệnh lý kèm theo và thuốc đang dùng</li>
+                                <li>Mức độ ưu tiên chất lượng cuộc sống</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.display-3 {
+    font-weight: 700;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+@media (max-width: 768px) {
+    .display-3 {
+        font-size: 2.5rem;
+    }
+    
+    .col-sm-6 {
+        margin-bottom: 1rem;
+    }
+}
+
+.fs-6 {
+    font-size: 1.25rem !important;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Smooth animations for cards
+    $('.card').hide().fadeIn(1000);
+    
+    // Progress bar animation
+    $('.progress-bar').css('width', '0%').animate({
+        width: '{{ prediction_result.benefit_score if prediction_result and prediction_result.status == "success" else 0 }}%'
+    }, 2000);
+    
+    // Form validation
+    $('#planned_duration').on('input', function() {
+        var value = parseInt($(this).val());
+        if (value > 120) {
+            $(this).addClass('is-invalid');
+            $('.invalid-feedback').remove();
+            $(this).after('<div class="invalid-feedback">Thời gian điều trị không nên vượt quá 120 tháng</div>');
+        } else {
+            $(this).removeClass('is-invalid');
+            $('.invalid-feedback').remove();
+        }
+    });
+});
+</script>
+{% endblock %}

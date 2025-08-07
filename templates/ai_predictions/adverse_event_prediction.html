@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Cảnh báo Biến cố Bất lợi - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-shield-alt text-info"></i> Cảnh báo Sớm Nguy cơ Biến cố Bất lợi</h2>
+                    <p class="text-muted mb-0">Bệnh nhân: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_code }})</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('ai_predictions_dashboard', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Prediction Form -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Thông tin Điều trị</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.treatment_type.label(class="form-label") }}
+                            {{ form.treatment_type(class="form-select", onchange="toggleTreatmentDetails()") }}
+                        </div>
+                        
+                        <!-- Surgery Details -->
+                        <div id="surgery-details" class="treatment-details" style="display: none;">
+                            <div class="mb-3">
+                                {{ form.surgery_type.label(class="form-label") }}
+                                {{ form.surgery_type(class="form-select") }}
+                            </div>
+                        </div>
+                        
+                        <!-- Radiation Details -->
+                        <div id="radiation-details" class="treatment-details" style="display: none;">
+                            <div class="mb-3">
+                                {{ form.radiation_type.label(class="form-label") }}
+                                {{ form.radiation_type(class="form-select") }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.radiation_dose.label(class="form-label") }}
+                                {{ form.radiation_dose(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <!-- Hormone Therapy Details -->
+                        <div id="hormone-details" class="treatment-details" style="display: none;">
+                            <div class="mb-3">
+                                {{ form.hormone_drug.label(class="form-label") }}
+                                {{ form.hormone_drug(class="form-select") }}
+                            </div>
+                        </div>
+                        
+                        <!-- Chemotherapy Details -->
+                        <div id="chemotherapy-details" class="treatment-details" style="display: none;">
+                            <div class="mb-3">
+                                {{ form.chemo_regimen.label(class="form-label") }}
+                                {{ form.chemo_regimen(class="form-select") }}
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            {{ form.age_group.label(class="form-label") }}
+                            {{ form.age_group(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.cardiovascular_risk.label(class="form-label") }}
+                            {{ form.cardiovascular_risk(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.diabetes_status.label(class="form-label") }}
+                            {{ form.diabetes_status(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.bone_health_status.label(class="form-label") }}
+                            {{ form.bone_health_status(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.prediction_timeframe.label(class="form-label") }}
+                            {{ form.prediction_timeframe(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.previous_ae_concern.label(class="form-label") }}
+                            {{ form.previous_ae_concern(class="form-control", rows="3", placeholder="Ví dụ: Quan tâm đặc biệt về nguy cơ loãng xương...") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.include_prevention(class="form-check-input") }}
+                                {{ form.include_prevention.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.include_monitoring(class="form-check-input") }}
+                                {{ form.include_monitoring.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-info") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Results -->
+        <div class="col-lg-8">
+            {% if prediction_result %}
+                {% if prediction_result.status == 'success' %}
+                    <!-- Overall Risk Level -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Tổng quan Nguy cơ Biến cố Bất lợi</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <h2 class="display-4 text-{{ 'danger' if prediction_result.overall_risk_level == 'high' else 'warning' if prediction_result.overall_risk_level == 'moderate' else 'success' }}">
+                                    {{ prediction_result.overall_risk_level | title }}
+                                </h2>
+                                <p class="text-muted">Mức độ nguy cơ tổng thể</p>
+                            </div>
+                            
+                            {% if prediction_result.personalized_warnings %}
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle"></i> Cảnh báo Cá nhân hóa:</h6>
+                                    <ul class="mb-0">
+                                        {% for warning in prediction_result.personalized_warnings %}
+                                            <li>{{ warning }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- High Risk Events -->
+                    {% if prediction_result.high_risk_events %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-exclamation-circle"></i> Biến cố Nguy cơ Cao</h5>
+                            </div>
+                            <div class="card-body">
+                                {% for event in prediction_result.high_risk_events %}
+                                    <div class="border rounded p-3 mb-3">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="text-danger">{{ event.event_name }}</h6>
+                                                <div class="mb-2">
+                                                    <small class="text-muted">CTCAE Grade:</small>
+                                                    <span class="badge bg-{{ 'danger' if event.ctcae_grade in ['4', '5'] else 'warning' if event.ctcae_grade == '3' else 'info' }}">
+                                                        Grade {{ event.ctcae_grade }}
+                                                    </span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <small class="text-muted">Xác suất:</small>
+                                                    <span class="badge bg-{{ 'danger' if event.probability == 'high' else 'warning' if event.probability == 'moderate' else 'success' }}">
+                                                        {{ event.probability | title }} ({{ event.probability_percent }}%)
+                                                    </span>
+                                                </div>
+                                                {% if event.time_to_onset %}
+                                                    <div class="mb-2">
+                                                        <small class="text-muted">Thời gian dự kiến:</small> {{ event.time_to_onset }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                {% if event.prevention_measures %}
+                                                    <div class="mb-2">
+                                                        <strong class="text-success">Phòng ngừa:</strong>
+                                                        <ul class="small mb-0">
+                                                            {% for measure in event.prevention_measures %}
+                                                                <li>{{ measure }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
+                                                {% if event.monitoring_recommendations %}
+                                                    <div class="mb-2">
+                                                        <strong class="text-primary">Theo dõi:</strong>
+                                                        <ul class="small mb-0">
+                                                            {% for monitor in event.monitoring_recommendations %}
+                                                                <li>{{ monitor }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Clinical Recommendations -->
+                    <div class="row">
+                        {% if prediction_result.drug_interactions %}
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h5 class="mb-0"><i class="fas fa-pills"></i> Tương tác Thuốc</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            {% for interaction in prediction_result.drug_interactions %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                                    {{ interaction }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if prediction_result.lifestyle_recommendations %}
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="fas fa-heart"></i> Khuyến nghị Lối sống</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            {% for recommendation in prediction_result.lifestyle_recommendations %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                                    {{ recommendation }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Emergency Signs and Follow-up -->
+                    <div class="row mt-4">
+                        {% if prediction_result.emergency_signs %}
+                            <div class="col-md-6">
+                                <div class="card border-danger">
+                                    <div class="card-header bg-danger text-white">
+                                        <h5 class="mb-0"><i class="fas fa-ambulance"></i> Dấu hiệu Cấp cứu</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-danger">
+                                            <strong>Liên hệ ngay bác sĩ nếu có:</strong>
+                                        </div>
+                                        <ul class="list-unstyled">
+                                            {% for sign in prediction_result.emergency_signs %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                                                    {{ sign }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if prediction_result.follow_up_schedule %}
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Lịch Tái khám</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0">{{ prediction_result.follow_up_schedule }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Model Information -->
+                    <div class="card mt-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="fas fa-info"></i> Thông tin Phân tích</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Loại điều trị:</strong> {{ prediction_result.treatment_type }}<br>
+                                        <strong>Thời gian phân tích:</strong> {{ prediction_result.prediction_date[:19] | replace('T', ' ') }}
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-warning alert-sm">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Lưu ý:</strong> Dự báo này chỉ mang tính tham khảo. Quyết định điều trị cuối cùng thuộc về bác sĩ chuyên khoa.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <!-- Error Display -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <h5><i class="fas fa-exclamation-circle"></i> Lỗi Phân tích</h5>
+                                <p class="mb-0">{{ prediction_result.message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Initial State -->
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt fa-5x text-info mb-4"></i>
+                        <h4 class="text-muted">Sẵn sàng Phân tích Nguy cơ Biến cố</h4>
+                        <p class="text-muted">
+                            Điền thông tin điều trị và yếu tố nguy cơ bên trái và nhấn "Dự báo Nguy cơ Biến cố" để bắt đầu.
+                        </p>
+                        <div class="alert alert-info">
+                            <strong>Cảnh báo Sớm Biến cố Bất lợi</strong> sử dụng AI để dự báo nguy cơ dựa trên:
+                            <ul class="mt-2 mb-0 text-start">
+                                <li>Loại điều trị và thông số kỹ thuật</li>
+                                <li>Đặc điểm bệnh nhân và bệnh lý kèm theo</li>
+                                <li>Lịch sử biến cố bất lợi trước đó</li>
+                                <li>Yếu tố nguy cơ cá nhân</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.display-4 {
+    font-weight: 700;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.treatment-details {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2.5rem;
+    }
+}
+</style>
+
+<script>
+function toggleTreatmentDetails() {
+    // Hide all treatment detail sections
+    const allDetails = document.querySelectorAll('.treatment-details');
+    allDetails.forEach(detail => {
+        detail.style.display = 'none';
+    });
+    
+    // Show relevant treatment details based on selection
+    const treatmentType = document.getElementById('treatment_type').value;
+    if (treatmentType) {
+        const detailSection = document.getElementById(treatmentType + '-details');
+        if (detailSection) {
+            detailSection.style.display = 'block';
+        }
+    }
+}
+
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Smooth animations for cards
+    $('.card').hide().fadeIn(1000);
+    
+    // Initialize treatment details visibility
+    toggleTreatmentDetails();
+    
+    // Form validation
+    $('#radiation_dose').on('input', function() {
+        var value = parseFloat($(this).val());
+        if (value > 100) {
+            $(this).addClass('is-invalid');
+            $('.invalid-feedback').remove();
+            $(this).after('<div class="invalid-feedback">Liều xạ không nên vượt quá 100 Gy</div>');
+        } else {
+            $(this).removeClass('is-invalid');
+            $('.invalid-feedback').remove();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Lỗi hệ thống - 500{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="text-center">
+                <div class="error-code">500</div>
+                <div class="error-message mb-4">
+                    <h2>Lỗi hệ thống</h2>
+                    <p class="text-muted">Xin lỗi, đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.</p>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-home me-1"></i>Về trang chủ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

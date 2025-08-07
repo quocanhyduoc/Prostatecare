@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Patient Header -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-md me-2"></i>
+                        Bệnh nhân: {{ patient.full_name }}
+                        <span class="badge bg-light text-primary ms-2">{{ patient.patient_code }}</span>
+                    </h5>
+                </div>
+            </div>
+
+            <!-- Surgery Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-scalpel me-2"></i>
+                        {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="row g-3">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h6 class="text-success border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.treatment_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.treatment_name(class="form-control") }}
+                            {% if form.treatment_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.treatment_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.start_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.start_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.end_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.end_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.status.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        
+                        <!-- Surgery Specific Fields -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-success border-bottom pb-2 mb-3">
+                                <i class="fas fa-procedures me-2"></i>Chi tiết phẫu thuật
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.surgery_method.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.surgery_method(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.surgeon_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.surgeon_name(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.operative_time.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.operative_time(class="form-control") }}
+                                <span class="input-group-text">phút</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.blood_loss.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.blood_loss(class="form-control") }}
+                                <span class="input-group-text">mL</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Pathology Results -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-success border-bottom pb-2 mb-3">
+                                <i class="fas fa-microscope me-2"></i>Kết quả mô bệnh học
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.pathology_t_stage.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.pathology_t_stage(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.pathology_n_stage.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.pathology_n_stage(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.pathology_m_stage.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.pathology_m_stage(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.gleason_score.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.gleason_score(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.surgical_margin.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.surgical_margin(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.lymph_nodes_examined.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.lymph_nodes_examined(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.lymph_nodes_positive.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.lymph_nodes_positive(class="form-control") }}
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-success border-bottom pb-2 mb-3">
+                                <i class="fas fa-clipboard-list me-2"></i>Thông tin bổ sung
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.complications.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.complications(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.notes.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="col-12 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Lưu thông tin
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Date input enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Set max date to today for surgery dates
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    
+    dateInputs.forEach(function(input) {
+        if (input.name === 'start_date' || input.name === 'end_date') {
+            input.max = today;
+        }
+    });
+    
+    // Auto-calculate lymph node ratio if both values are entered
+    const nodesExamined = document.getElementById('lymph_nodes_examined');
+    const nodesPositive = document.getElementById('lymph_nodes_positive');
+    
+    if (nodesExamined && nodesPositive) {
+        function validateLymphNodes() {
+            const examined = parseInt(nodesExamined.value) || 0;
+            const positive = parseInt(nodesPositive.value) || 0;
+            
+            if (positive > examined && examined > 0) {
+                nodesPositive.setCustomValidity('Số hạch dương tính không được vượt quá số hạch xét nghiệm');
+            } else {
+                nodesPositive.setCustomValidity('');
+            }
+        }
+        
+        nodesExamined.addEventListener('input', validateLymphNodes);
+        nodesPositive.addEventListener('input', validateLymphNodes);
+    }
+});
+</script>
+{% endblock %}

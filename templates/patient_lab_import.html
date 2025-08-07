@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Nhập Lab - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">
+                <i class="fas fa-download me-2"></i>Nhập kết quả từ Lab
+            </h1>
+            <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Trở lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Bệnh nhân:</strong> {{ patient.full_name }} ({{ patient.patient_code }})
+            {% if patient.external_lab_id %}
+                <br><strong>Mã Lab:</strong> {{ patient.external_lab_id }}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-flask me-2"></i>Nhập từ hệ thống Lab
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.lab_system.label(class="form-label") }}
+                        {{ form.lab_system(class="form-control") }}
+                        {% if form.lab_system.errors %}
+                            <div class="text-danger">
+                                {% for error in form.lab_system.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.patient_lab_id.label(class="form-label") }}
+                        {{ form.patient_lab_id(class="form-control") }}
+                        {% if form.patient_lab_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.patient_lab_id.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.import_days.label(class="form-label") }}
+                        {{ form.import_days(class="form-control") }}
+                        {% if form.import_days.errors %}
+                            <div class="text-danger">
+                                {% for error in form.import_days.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Thông tin
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Hệ thống được hỗ trợ:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>LabCorp</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Quest Diagnostics</li>
+                </ul>
+                
+                <h6>Dữ liệu sẽ nhập:</h6>
+                <ul class="list-unstyled small text-muted">
+                    <li>• PSA tự do (Free PSA)</li>
+                    <li>• PSA tổng (Total PSA)</li>
+                    <li>• Testosterone</li>
+                    <li>• Tỷ lệ PSA (tự động tính)</li>
+                </ul>
+                
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Kết quả trùng ngày sẽ được bỏ qua để tránh trùng lặp.
+                    </small>
+                </div>
+                
+                {% if patient.last_lab_import %}
+                <div class="mt-3">
+                    <h6>Lần nhập cuối:</h6>
+                    <p class="small">{{ patient.last_lab_import.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if not patient.external_lab_id %}
+        <div class="card medical-card mt-3">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>Cấu hình
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="small text-muted">Chưa cấu hình thông tin lab</p>
+                <a href="{{ url_for('patient_lab_config', patient_id=patient.id) }}" 
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-cog me-1"></i>Cấu hình ngay
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if import_results %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Kết quả nhập từ {{ import_results.lab_system.upper() }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-success text-center">
+                            <h4>{{ import_results.imported_count }}</h4>
+                            <small>Kết quả đã nhập</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning text-center">
+                            <h4>{{ import_results.errors|length }}</h4>
+                            <small>Lỗi</small>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if import_results.errors %}
+                <div class="mt-3">
+                    <h6>Chi tiết lỗi:</h6>
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            {% for error in import_results.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if import_results.imported_count > 0 %}
+                <div class="mt-3">
+                    <a href="{{ url_for('patient_detail', patient_id=patient.id) }}#blood-test" class="btn btn-primary">
+                        <i class="fas fa-eye me-1"></i>Xem kết quả xét nghiệm
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

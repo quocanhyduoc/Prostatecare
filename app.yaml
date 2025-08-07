@@ -1,0 +1,34 @@
+runtime: python311
+
+env_variables:
+  SESSION_SECRET: "QF1/4+Me144jTeAnE4YzYQMFBK7wb/f5cmPBzbhn195lWhNNPsMz4hzOv6jk3oeqFmK15fIdjCUsOyJL2pQoFg=="
+  DATABASE_URL: "postgresql://neondb_owner:npg_SFH86PlKWmIc@ep-crimson-cloud-afk6hyt1.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require"
+  GEMINI_API_KEY: "AIzaSyBgTdgam1GXtwFCou6GgNYrb0AfTsJcDuQ"
+  
+# Cấu hình cho App Engine
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+# Resources
+resources:
+  cpu: 1
+  memory_gb: 2
+  disk_size_gb: 10
+
+# Health checks
+liveness_check:
+  path: "/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+readiness_check:
+  path: "/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  app_start_timeout_sec: 300

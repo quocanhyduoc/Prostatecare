@@ -1,0 +1,1104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ patient.full_name }} - Chi tiết bệnh nhân{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-user-md me-2"></i>{{ patient.full_name }}
+                    <small class="text-muted">{{ patient.patient_code }}</small>
+                </h1>
+            </div>
+            <div>
+                <!-- Lab Integration Dropdown -->
+                <div class="btn-group me-2" role="group">
+                    <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-flask me-1"></i>Lab
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('patient_lab_config', patient_id=patient.id) }}">
+                            <i class="fas fa-cog me-2"></i>Cấu hình Lab
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('patient_lab_import', patient_id=patient.id) }}">
+                            <i class="fas fa-download me-2"></i>Nhập từ Lab
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-muted">
+                            {% if patient.external_lab_id %}
+                                <i class="fas fa-check-circle text-success me-2"></i>Lab ID: {{ patient.external_lab_id }}
+                            {% else %}
+                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>Chưa cấu hình
+                            {% endif %}
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <a href="{{ url_for('patient_report_pdf', patient_id=patient.id) }}" class="btn btn-success me-2">
+                    <i class="fas fa-file-pdf me-1"></i>Báo cáo PDF
+                </a>
+                <a href="{{ url_for('ai_predictions_dashboard', patient_id=patient.id) }}" class="btn btn-primary me-2">
+                    <i class="fas fa-brain me-1"></i>Dự báo AI
+                </a>
+                <a href="{{ url_for('patient_edit', patient_id=patient.id) }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-edit me-1"></i>{{ t.edit }}
+                </a>
+                {% if current_user.can_delete_patient() %}
+                    <a href="{{ url_for('patient_delete_confirm', patient_id=patient.id) }}" class="btn btn-outline-danger me-2">
+                        <i class="fas fa-trash-alt me-1"></i>Xóa bệnh nhân
+                    </a>
+                {% endif %}
+                <a href="{{ url_for('patient_list') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>{{ t.back }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Overview -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-primary">
+            <div class="card-body text-center">
+                <i class="fas fa-birthday-cake fa-2x mb-2"></i>
+                <h5>{{ t.age }}</h5>
+                <h3>{{ patient.age }} tuổi</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-info">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                <h5>{{ t.diagnosis_date }}</h5>
+                <h6>{{ patient.diagnosis_date.strftime('%d/%m/%Y') }}</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-warning">
+            <div class="card-body text-center">
+                <i class="fas fa-star fa-2x mb-2"></i>
+                <h5>{{ t.gleason_score }}</h5>
+                <h6>{{ patient.gleason_score or 'Chưa có' }}</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card stat-success">
+            <div class="card-body text-center">
+                <i class="fas fa-layer-group fa-2x mb-2"></i>
+                <h5>{{ t.cancer_stage }}</h5>
+                <h6>{{ patient.cancer_stage or 'Chưa có' }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Patient Information Tab -->
+    <div class="col-12">
+        <ul class="nav nav-tabs medical-tabs" id="patientTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button">
+                    <i class="fas fa-user me-1"></i>Thông tin bệnh nhân
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="blood-test-tab" data-bs-toggle="tab" data-bs-target="#blood-test" type="button">
+                    <i class="fas fa-vial me-1"></i>{{ t.blood_tests }}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="treatment-tab" data-bs-toggle="tab" data-bs-target="#treatment" type="button">
+                    <i class="fas fa-pills me-1"></i>{{ t.treatment }}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="imaging-tab" data-bs-toggle="tab" data-bs-target="#imaging" type="button">
+                    <i class="fas fa-x-ray me-1"></i>{{ t.imaging }}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button">
+                    <i class="fas fa-calendar-check me-1"></i>Lịch hẹn
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="staging-tab" data-bs-toggle="tab" data-bs-target="#staging" type="button">
+                    <i class="fas fa-chart-line me-1"></i>Phân giai đoạn TNM
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ai-assessment-tab" data-bs-toggle="tab" data-bs-target="#ai-assessment" type="button">
+                    <i class="fas fa-robot me-1"></i>Đánh giá AI
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button">
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ t.events }}
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content medical-tab-content" id="patientTabContent">
+            <!-- Patient Information Tab -->
+            <div class="tab-pane fade show active" id="info" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">Thông tin hành chính</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>{{ t.patient_code }}:</strong></td>
+                                        <td>{{ patient.patient_code }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.full_name }}:</strong></td>
+                                        <td>{{ patient.full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.date_of_birth }}:</strong></td>
+                                        <td>{{ patient.date_of_birth.strftime('%d/%m/%Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.phone }}:</strong></td>
+                                        <td>{{ patient.phone or 'Chưa có' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.address }}:</strong></td>
+                                        <td>{{ patient.address or 'Chưa có' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.insurance_number }}:</strong></td>
+                                        <td>{{ patient.insurance_number or 'Chưa có' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">Thông tin chẩn đoán</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>{{ t.diagnosis_date }}:</strong></td>
+                                        <td>{{ patient.diagnosis_date.strftime('%d/%m/%Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.gleason_score }}:</strong></td>
+                                        <td>{{ patient.gleason_score or 'Chưa có' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.cancer_stage }}:</strong></td>
+                                        <td>{{ patient.cancer_stage or 'Chưa có' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.initial_psa }}:</strong></td>
+                                        <td>{{ patient.initial_psa or 'Chưa có' }} {% if patient.initial_psa %}ng/mL{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.sampling_method }}:</strong></td>
+                                        <td>{{ t[patient.sampling_method] if patient.sampling_method else 'Chưa có' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>{{ t.sampling_date }}:</strong></td>
+                                        <td>{{ patient.sampling_date.strftime('%d/%m/%Y') if patient.sampling_date else 'Chưa có' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TNM Staging and Pathology Image Section -->
+                {% if patient.clinical_t or patient.clinical_n or patient.clinical_m or patient.pathological_t or patient.pathological_n or patient.pathological_m or patient.pathology_image_path %}
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>Phân giai đoạn TNM & Hình ảnh giải phẫu bệnh
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% if patient.clinical_t or patient.clinical_n or patient.clinical_m %}
+                                    <div class="col-lg-4 mb-3">
+                                        <h6 class="text-primary">Giai đoạn lâm sàng</h6>
+                                        <ul class="list-unstyled">
+                                            {% if patient.clinical_t %}<li><strong>T:</strong> {{ patient.clinical_t }}</li>{% endif %}
+                                            {% if patient.clinical_n %}<li><strong>N:</strong> {{ patient.clinical_n }}</li>{% endif %}
+                                            {% if patient.clinical_m %}<li><strong>M:</strong> {{ patient.clinical_m }}</li>{% endif %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if patient.pathological_t or patient.pathological_n or patient.pathological_m %}
+                                    <div class="col-lg-4 mb-3">
+                                        <h6 class="text-primary">Giai đoạn giải phẫu bệnh</h6>
+                                        <ul class="list-unstyled">
+                                            {% if patient.pathological_t %}<li><strong>pT:</strong> {{ patient.pathological_t }}</li>{% endif %}
+                                            {% if patient.pathological_n %}<li><strong>pN:</strong> {{ patient.pathological_n }}</li>{% endif %}
+                                            {% if patient.pathological_m %}<li><strong>pM:</strong> {{ patient.pathological_m }}</li>{% endif %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if patient.pathology_image_path %}
+                                    <div class="col-lg-4 mb-3">
+                                        <h6 class="text-primary">Hình ảnh giải phẫu bệnh</h6>
+                                        <div class="pathology-image-container">
+                                            <img src="{{ url_for('static', filename=patient.pathology_image_path) }}" 
+                                                 class="img-fluid rounded" 
+                                                 alt="Hình ảnh giải phẫu bệnh"
+                                                 style="max-height: 200px; cursor: pointer;"
+                                                 onclick="showImageModal('{{ url_for('static', filename=patient.pathology_image_path) }}')">
+                                            <div class="mt-2">
+                                                <small class="text-muted">{{ patient.pathology_image_filename }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- TNM Staging Tab -->
+            <div class="tab-pane fade" id="staging" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">Giai đoạn lâm sàng (Clinical)</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>T (Khối u):</strong></td>
+                                        <td>{{ patient.clinical_t or 'Chưa xác định' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>N (Hạch):</strong></td>
+                                        <td>{{ patient.clinical_n or 'Chưa xác định' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>M (Di căn):</strong></td>
+                                        <td>{{ patient.clinical_m or 'Chưa xác định' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">Giai đoạn giải phẫu bệnh (Pathological)</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>pT (Khối u):</strong></td>
+                                        <td>{{ patient.pathological_t or 'Chưa xác định' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>pN (Hạch):</strong></td>
+                                        <td>{{ patient.pathological_n or 'Chưa xác định' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>pM (Di căn):</strong></td>
+                                        <td>{{ patient.pathological_m or 'Chưa xác định' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if patient.pathology_image_path %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">Hình ảnh giải phẫu bệnh</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <img src="{{ url_for('static', filename=patient.pathology_image_path) }}" 
+                                     class="img-fluid rounded shadow" 
+                                     alt="Hình ảnh giải phẫu bệnh"
+                                     style="max-height: 400px; cursor: pointer;"
+                                     onclick="showImageModal('{{ url_for('static', filename=patient.pathology_image_path) }}')">
+                                <div class="mt-3">
+                                    <small class="text-muted">Tên file gốc: {{ patient.pathology_image_filename }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- AI Assessment Tab -->
+            <div class="tab-pane fade" id="ai-assessment" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Đánh giá nguy cơ bằng AI</h5>
+                            <form method="POST" action="{{ url_for('ai_assess_patient', patient_id=patient.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-primary" id="aiAssessBtn">
+                                    <i class="fas fa-robot me-2"></i>Phân tầng nguy cơ tự động
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if patient.ai_risk_score or patient.ai_staging_result %}
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-robot me-2"></i>Kết quả đánh giá nguy cơ tự động
+                                </h5>
+                                {% if patient.ai_assessment_date %}
+                                <small class="text-muted">Cập nhật lần cuối: {{ patient.ai_assessment_date.strftime('%d/%m/%Y %H:%M') }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                {% if patient.ai_risk_score %}
+                                <div class="alert {% if patient.ai_risk_score == 'THẤP' %}alert-success{% elif patient.ai_risk_score == 'TRUNG BÌNH' %}alert-warning{% else %}alert-danger{% endif %} mb-4">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Mức độ nguy cơ: {{ patient.ai_risk_score }}
+                                    </h6>
+                                </div>
+                                {% endif %}
+                                
+                                {% if patient.ai_staging_result %}
+                                <div class="ai-assessment-content">
+                                    <div class="bg-light p-3 rounded">
+                                        {{ patient.ai_staging_result|replace('\n', '<br>')|safe }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Kết quả đánh giá được tạo tự động bằng AI Gemini dựa trên dữ liệu TNM và các thông số lâm sàng. 
+                                        Vui lòng tham khảo ý kiến bác sĩ chuyên khoa để có quyết định điều trị phù hợp.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card medical-card">
+                            <div class="card-body text-center text-muted py-5">
+                                <i class="fas fa-robot fa-3x mb-3"></i>
+                                <h5>Chưa có đánh giá AI</h5>
+                                <p>Đánh giá nguy cơ tự động sẽ được thực hiện khi có đầy đủ thông tin TNM và dữ liệu lâm sàng.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Blood Tests Tab -->
+            <div class="tab-pane fade" id="blood-test" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-lg-8">
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('blood_test_new', patient_id=patient.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Thêm xét nghiệm
+                            </a>
+                            <a href="{{ url_for('blood_test_import', patient_id=patient.id) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-file-import me-1"></i>Nhập từ Excel
+                            </a>
+                            <a href="{{ url_for('download_blood_test_template', patient_id=patient.id) }}" class="btn btn-outline-success">
+                                <i class="fas fa-download me-1"></i>Tải mẫu Excel
+                            </a>
+                            <a href="{{ url_for('export_blood_tests', patient_id=patient.id) }}" class="btn btn-outline-success">
+                                <i class="fas fa-file-export me-1"></i>Xuất Excel
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <a href="{{ url_for('blood_tests_list', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>Xem tất cả
+                        </a>
+                    </div>
+                </div>
+                
+                {% if blood_tests %}
+                    <!-- Responsive Interactive Charts -->
+                    <div class="row mb-4">
+                        <!-- PSA Overview Chart -->
+                        <div class="col-lg-12 mb-4">
+                            <div class="chart-container overview-chart-container">
+                                <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="chart-title mb-0">
+                                        <i class="fas fa-chart-line me-2"></i>Tổng quan PSA
+                                    </h6>
+                                    <div class="chart-controls">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleChartFullscreen('overviewChart')" title="Toàn màn hình">
+                                            <i class="fas fa-expand"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper position-relative">
+                                    <canvas id="overviewChart" class="blood-test-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Detailed PSA Chart -->
+                        <div class="col-lg-8 mb-4">
+                            <div class="chart-container psa-chart-container">
+                                <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="chart-title mb-0">
+                                        <i class="fas fa-vial me-2"></i>Chi tiết PSA theo thời gian
+                                    </h6>
+                                    <div class="chart-controls">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleChartFullscreen('psaDetailChart')" title="Toàn màn hình">
+                                            <i class="fas fa-expand"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper position-relative">
+                                    <canvas id="psaDetailChart" class="blood-test-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Testosterone Chart -->
+                        <div class="col-lg-4 mb-4">
+                            <div class="chart-container testosterone-chart-container">
+                                <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="chart-title mb-0">
+                                        <i class="fas fa-male me-2"></i>Testosterone
+                                    </h6>
+                                    <div class="chart-controls">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleChartFullscreen('testosteroneChart')" title="Toàn màn hình">
+                                            <i class="fas fa-expand"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper position-relative">
+                                    <canvas id="testosteroneChart" class="blood-test-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">Kết quả xét nghiệm máu</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if recent_blood_tests %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>{{ t.test_date }}</th>
+                                                    <th>{{ t.free_psa }}</th>
+                                                    <th>{{ t.total_psa }}</th>
+                                                    <th>{{ t.psa_ratio }}</th>
+                                                    <th>{{ t.testosterone }}</th>
+                                                    <th>{{ t.notes }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for test in recent_blood_tests %}
+                                                <tr>
+                                                    <td>{{ test.test_date.strftime('%d/%m/%Y') }}</td>
+                                                    <td>{{ "%.2f"|format(test.free_psa) if test.free_psa else '-' }}</td>
+                                                    <td>{{ "%.2f"|format(test.total_psa) if test.total_psa else '-' }}</td>
+                                                    <td>{{ "%.1f%%"|format(test.psa_ratio) if test.psa_ratio else '-' }}</td>
+                                                    <td>{{ "%.1f"|format(test.testosterone) if test.testosterone else '-' }}</td>
+                                                    <td>{{ test.notes or '-' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-vial fa-3x mb-3"></i>
+                                        <p>Chưa có kết quả xét nghiệm máu</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treatment Tab -->
+            <div class="tab-pane fade" id="treatment" role="tabpanel">
+                <!-- Treatment Management Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-medkit me-2"></i>Quản lý điều trị chuyên sâu
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <!-- Treatment Timeline -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <a href="{{ url_for('patient_treatment_timeline', patient_id=patient.id) }}" 
+                                           class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                            <i class="fas fa-timeline fa-2x mb-2"></i>
+                                            <strong>Dòng thời gian điều trị</strong>
+                                            <small class="text-muted">Xem tổng quan các đợt điều trị</small>
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Surgery -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <a href="{{ url_for('add_surgery_event', patient_id=patient.id) }}" 
+                                           class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                            <i class="fas fa-scalpel fa-2x mb-2"></i>
+                                            <strong>Phẫu thuật</strong>
+                                            <small class="text-muted">Thêm thông tin phẫu thuật</small>
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Radiation Therapy -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <a href="{{ url_for('add_radiation_event', patient_id=patient.id) }}" 
+                                           class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                            <i class="fas fa-radiation fa-2x mb-2"></i>
+                                            <strong>Xạ trị</strong>
+                                            <small class="text-muted">Thêm thông tin xạ trị</small>
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Hormone Therapy / ADT -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <a href="{{ url_for('add_hormone_therapy_event', patient_id=patient.id) }}" 
+                                           class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                            <i class="fas fa-pills fa-2x mb-2"></i>
+                                            <strong>Liệu pháp nội tiết</strong>
+                                            <small class="text-muted">ADT và liệu pháp hormone</small>
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Chemotherapy -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <a href="{{ url_for('add_chemotherapy_event', patient_id=patient.id) }}" 
+                                           class="btn btn-outline-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                            <i class="fas fa-flask fa-2x mb-2"></i>
+                                            <strong>Hóa trị</strong>
+                                            <small class="text-muted">Thêm thông tin hóa trị</small>
+                                        </a>
+                                    </div>
+                                    
+                                    <!-- Systemic Therapy -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <a href="{{ url_for('add_systemic_therapy_event', patient_id=patient.id) }}" 
+                                           class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                            <i class="fas fa-syringe fa-2x mb-2"></i>
+                                            <strong>Liệu pháp toàn thân</strong>
+                                            <small class="text-muted">Immunotherapy, targeted therapy</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Treatment History Summary -->
+                {% set treatment_timeline = patient.get_treatment_timeline() %}
+                {% if treatment_timeline %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-history me-2"></i>Lịch sử điều trị gần đây
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for event_data in treatment_timeline[:6] %}
+                                            {% set event = event_data.event %}
+                                            {% set event_type = event_data.type %}
+                                            <div class="col-md-6 col-lg-4 mb-3">
+                                                <div class="card h-100 border-0" style="background: linear-gradient(135deg, 
+                                                    {% if event_type == 'SURGERY' %}#d4edda 0%, #c3e6cb 100%
+                                                    {% elif event_type == 'RADIATION' %}#fff3cd 0%, #ffeaa7 100%
+                                                    {% elif event_type == 'HORMONE_THERAPY' %}#d1ecf1 0%, #bee5eb 100%
+                                                    {% elif event_type == 'CHEMOTHERAPY' %}#f8d7da 0%, #f5c6cb 100%
+                                                    {% elif event_type == 'SYSTEMIC_THERAPY' %}#e2e3e5 0%, #d6d8db 100%
+                                                    {% endif %});">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <span class="badge 
+                                                                {% if event_type == 'SURGERY' %}bg-success
+                                                                {% elif event_type == 'RADIATION' %}bg-warning
+                                                                {% elif event_type == 'HORMONE_THERAPY' %}bg-info
+                                                                {% elif event_type == 'CHEMOTHERAPY' %}bg-danger
+                                                                {% elif event_type == 'SYSTEMIC_THERAPY' %}bg-secondary
+                                                                {% endif %} me-2">
+                                                                {% if event_type == 'SURGERY' %}<i class="fas fa-scalpel"></i>
+                                                                {% elif event_type == 'RADIATION' %}<i class="fas fa-radiation"></i>
+                                                                {% elif event_type == 'HORMONE_THERAPY' %}<i class="fas fa-pills"></i>
+                                                                {% elif event_type == 'CHEMOTHERAPY' %}<i class="fas fa-flask"></i>
+                                                                {% elif event_type == 'SYSTEMIC_THERAPY' %}<i class="fas fa-syringe"></i>
+                                                                {% endif %}
+                                                            </span>
+                                                            <small class="text-muted">
+                                                                {% if event_type == 'SURGERY' %}Phẫu thuật
+                                                                {% elif event_type == 'RADIATION' %}Xạ trị
+                                                                {% elif event_type == 'HORMONE_THERAPY' %}Nội tiết
+                                                                {% elif event_type == 'CHEMOTHERAPY' %}Hóa trị
+                                                                {% elif event_type == 'SYSTEMIC_THERAPY' %}Toàn thân
+                                                                {% endif %}
+                                                            </small>
+                                                        </div>
+                                                        <h6 class="card-title mb-1">{{ event.treatment_name }}</h6>
+                                                        <p class="card-text small mb-2">
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            {{ event.start_date.strftime('%d/%m/%Y') if event.start_date }}
+                                                            {% if event.end_date %} - {{ event.end_date.strftime('%d/%m/%Y') }}{% endif %}
+                                                        </p>
+                                                        <span class="badge 
+                                                            {% if event.status == 'ACTIVE' %}bg-success
+                                                            {% elif event.status == 'COMPLETED' %}bg-primary
+                                                            {% elif event.status == 'PLANNED' %}bg-warning
+                                                            {% elif event.status == 'DISCONTINUED' %}bg-danger
+                                                            {% else %}bg-secondary
+                                                            {% endif %} small">
+                                                            {% if event.status == 'ACTIVE' %}Đang điều trị
+                                                            {% elif event.status == 'COMPLETED' %}Hoàn thành
+                                                            {% elif event.status == 'PLANNED' %}Dự định
+                                                            {% elif event.status == 'DISCONTINUED' %}Đã dừng
+                                                            {% else %}{{ event.status }}
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    {% if treatment_timeline|length > 6 %}
+                                        <div class="text-center mt-3">
+                                            <a href="{{ url_for('patient_treatment_timeline', patient_id=patient.id) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-eye me-2"></i>Xem tất cả ({{ treatment_timeline|length }} điều trị)
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Legacy Treatment Section for Backward Compatibility -->
+                {% if current_treatment %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card medical-card border-success">
+                                <div class="card-header medical-card-header bg-success text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-pills me-2"></i>{{ t.current_treatment }}
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <h6><strong>{{ current_treatment.treatment_name }}</strong></h6>
+                                            <p class="text-muted mb-2">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ current_treatment.start_date.strftime('%d/%m/%Y') }}
+                                                {% if current_treatment.end_date %} - {{ current_treatment.end_date.strftime('%d/%m/%Y') }}{% endif %}
+                                            </p>
+                                            {% if current_treatment.notes %}
+                                                <p class="mb-2">{{ current_treatment.notes }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <a href="{{ url_for('medication_new', treatment_id=current_treatment.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-plus me-1"></i>Thêm thuốc
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if current_medications %}
+                                        <hr>
+                                        <h6 class="mb-3">{{ t.medications }}</h6>
+                                        <div class="row">
+                                            {% for med in current_medications %}
+                                                <div class="col-lg-6 mb-3">
+                                                    <div class="card border-primary">
+                                                        <div class="card-body p-3">
+                                                            <h6 class="card-title">{{ med.drug_name }}</h6>
+                                                            <p class="card-text mb-1">
+                                                                <strong>Liều:</strong> {{ med.dosage or 'Chưa có' }}
+                                                            </p>
+                                                            <p class="card-text mb-1">
+                                                                <strong>Tần suất:</strong> {{ med.frequency or 'Chưa có' }}
+                                                            </p>
+                                                            <p class="card-text mb-1">
+                                                                <strong>Đường dùng:</strong> {{ med.route or 'Chưa có' }}
+                                                            </p>
+                                                            <small class="text-muted">
+                                                                {{ med.start_date.strftime('%d/%m/%Y') }}
+                                                                {% if med.end_date %} - {{ med.end_date.strftime('%d/%m/%Y') }}{% endif %}
+                                                            </small>
+                                                            <div class="mt-2">
+                                                                <div class="btn-group" role="group">
+                                                                    <a href="{{ url_for('medication_schedule_list', medication_id=med.id) }}" 
+                                                                       class="btn btn-sm btn-outline-primary" title="Lịch trình">
+                                                                        <i class="fas fa-calendar-alt me-1"></i>Lịch trình
+                                                                    </a>
+                                                                    <a href="{{ url_for('medication_schedule_new', medication_id=med.id) }}" 
+                                                                       class="btn btn-sm btn-outline-success" title="Tạo lịch">
+                                                                        <i class="fas fa-plus me-1"></i>Tạo lịch
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-pills fa-3x mb-3"></i>
+                        <p>Chưa có điều trị hiện tại</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Imaging Tab -->
+            <div class="tab-pane fade" id="imaging" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-lg-8">
+                        <a href="{{ url_for('imaging_new', patient_id=patient.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Thêm chẩn đoán
+                        </a>
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <a href="{{ url_for('imaging_list', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>Xem tất cả
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card medical-card">
+                            <div class="card-body">
+                                {% if recent_imaging %}
+                                    {% for img in recent_imaging %}
+                                        <div class="card mb-3 border-info">
+                                            <div class="card-header bg-info text-white">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">
+                                                        <i class="fas fa-x-ray me-2"></i>{{ t[img.imaging_type] }}
+                                                    </h6>
+                                                    <small>{{ img.imaging_date.strftime('%d/%m/%Y') }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                {% if img.findings %}
+                                                    <h6>{{ t.findings }}:</h6>
+                                                    <p>{{ img.findings }}</p>
+                                                {% endif %}
+                                                {% if img.impression %}
+                                                    <h6>{{ t.impression }}:</h6>
+                                                    <p>{{ img.impression }}</p>
+                                                {% endif %}
+                                                {% if img.radiologist %}
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-user-md me-1"></i>{{ img.radiologist }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-x-ray fa-3x mb-3"></i>
+                                        <p>Chưa có kết quả chẩn đoán hình ảnh</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments Tab -->
+            <div class="tab-pane fade" id="appointments" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-lg-8">
+                        <a href="{{ url_for('appointment_new', patient_id=patient.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Tạo lịch hẹn
+                        </a>
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <a href="{{ url_for('patient_appointments', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>Xem tất cả
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card medical-card">
+                            <div class="card-header medical-card-header">
+                                <h5 class="mb-0">Lịch hẹn sắp tới</h5>
+                            </div>
+                            <div class="card-body">
+                                {% set upcoming_appointments = [] %}
+                                {% for appointment in patient.appointments %}
+                                    {% if appointment.status == 'SCHEDULED' and appointment.appointment_date >= today %}
+                                        {{ upcoming_appointments.append(appointment) or '' }}
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if upcoming_appointments %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Ngày hẹn</th>
+                                                    <th>Giờ hẹn</th>
+                                                    <th>Loại</th>
+                                                    <th>Mục đích</th>
+                                                    <th>Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for appointment in upcoming_appointments[:5] %}
+                                                <tr class="{% if appointment.is_today %}table-warning{% elif appointment.is_upcoming %}table-info{% endif %}">
+                                                    <td>
+                                                        {{ appointment.appointment_date.strftime('%d/%m/%Y') }}
+                                                        {% if appointment.is_today %}
+                                                            <br><small class="text-warning">
+                                                                <i class="fas fa-exclamation-circle me-1"></i>Hôm nay
+                                                            </small>
+                                                        {% elif appointment.needs_reminder %}
+                                                            <br><small class="text-info">
+                                                                <i class="fas fa-bell me-1"></i>Nhắc nhở
+                                                            </small>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if appointment.appointment_time %}
+                                                            {{ appointment.appointment_time.strftime('%H:%M') }}
+                                                        {% else %}
+                                                            <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if appointment.appointment_type == 'MEDICATION' %}
+                                                            <span class="badge bg-primary">Sử dụng thuốc</span>
+                                                        {% elif appointment.appointment_type == 'FOLLOW_UP' %}
+                                                            <span class="badge bg-success">Tái khám</span>
+                                                        {% else %}
+                                                            <span class="badge bg-info">Tư vấn</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ appointment.purpose or 'Không có' }}</td>
+                                                    <td>
+                                                        <a href="{{ url_for('appointment_edit', appointment_id=appointment.id) }}" 
+                                                           class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                                        <p>Không có lịch hẹn sắp tới</p>
+                                        <a href="{{ url_for('appointment_new', patient_id=patient.id) }}" 
+                                           class="btn btn-primary">
+                                            <i class="fas fa-plus me-2"></i>Tạo lịch hẹn đầu tiên
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Tab -->
+            <div class="tab-pane fade" id="events" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <a href="{{ url_for('event_new', patient_id=patient.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Thêm sự kiện
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card medical-card">
+                            <div class="card-body">
+                                {% if recent_events %}
+                                    {% for event in recent_events %}
+                                        <div class="event-item mb-3 p-3 rounded border-start border-3 
+                                             {% if event.priority == 'URGENT' %}border-danger bg-danger-subtle
+                                             {% elif event.priority == 'HIGH' %}border-warning bg-warning-subtle
+                                             {% elif event.priority == 'LOW' %}border-secondary bg-secondary-subtle
+                                             {% else %}border-info bg-info-subtle{% endif %}">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">{{ event.title }}</h6>
+                                                    <p class="mb-2">{{ event.description or 'Không có mô tả' }}</p>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-calendar me-1"></i>{{ event.event_date.strftime('%d/%m/%Y') }}
+                                                        </small>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-tag me-1"></i>{{ t[event.event_type] }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-{% if event.priority == 'URGENT' %}danger{% elif event.priority == 'HIGH' %}warning{% elif event.priority == 'LOW' %}secondary{% else %}info{% endif %} mb-1">
+                                                        {{ t[event.priority] }}
+                                                    </span>
+                                                    <br>
+                                                    <span class="badge bg-{% if event.status == 'RESOLVED' %}success{% elif event.status == 'IN_PROGRESS' %}warning{% else %}secondary{% endif %}">
+                                                        {{ t[event.status] }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                                        <p>Chưa có sự kiện nào</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Hình ảnh giải phẫu bệnh</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="Hình ảnh giải phẫu bệnh">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize responsive interactive charts
+document.addEventListener('DOMContentLoaded', function() {
+    {% if blood_tests %}
+        // Prepare blood test data for charts
+        const bloodTestData = [
+            {% for test in blood_tests %}
+            {
+                test_date: '{{ test.test_date.strftime("%Y-%m-%d") }}',
+                free_psa: {{ test.free_psa or 'null' }},
+                total_psa: {{ test.total_psa or 'null' }},
+                testosterone: {{ test.testosterone or 'null' }},
+                psa_ratio: {{ test.psa_ratio or 'null' }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Initialize charts using the new responsive chart system
+        if (window.BloodTestCharts) {
+            // Create overview chart (bar chart showing PSA trend)
+            window.BloodTestCharts.createOverviewChart('overviewChart', bloodTestData);
+            
+            // Create detailed PSA chart (line chart with multiple datasets)
+            window.BloodTestCharts.createPSAChart('psaDetailChart', bloodTestData);
+            
+            // Create testosterone chart (separate chart for testosterone)
+            window.BloodTestCharts.createTestosteroneChart('testosteroneChart', bloodTestData);
+        }
+    {% endif %}
+});
+
+// Function to show image modal
+function showImageModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    imageModal.show();
+}
+
+// Handle chart fullscreen toggle
+function toggleChartFullscreen(chartId) {
+    if (window.BloodTestCharts && window.BloodTestCharts.toggleChartFullscreen) {
+        window.BloodTestCharts.toggleChartFullscreen(chartId);
+    }
+}
+
+// Handle window resize for chart responsiveness
+window.addEventListener('resize', function() {
+    // Charts will automatically resize due to responsive: true setting
+    setTimeout(function() {
+        Object.values(Chart.instances).forEach(chart => {
+            if (chart && typeof chart.resize === 'function') {
+                chart.resize();
+            }
+        });
+    }, 100);
+});
+</script>
+{% endblock %}

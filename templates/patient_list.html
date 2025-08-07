@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.patients }} - Hệ thống quản lý bệnh nhân{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">
+                <i class="fas fa-users me-2"></i>{{ t.patients }}
+            </h1>
+            <div>
+                <!-- Export/Import Actions -->
+                <div class="btn-group me-3" role="group">
+                    <a href="{{ url_for('export_patients') }}" class="btn btn-outline-success">
+                        <i class="fas fa-file-excel me-1"></i>Xuất Excel
+                    </a>
+                    <a href="{{ url_for('excel_import') }}" class="btn btn-success">
+                        <i class="fas fa-file-excel me-1"></i>Nhập Excel
+                    </a>
+                </div>
+                
+                <!-- Bulk Delete Action (Admin Only) -->
+                {% if current_user.can_delete_patient() %}
+                    <button type="button" id="deleteSelectedBtn" class="btn btn-danger me-3" style="display: none;">
+                        <i class="fas fa-trash-alt me-1"></i>Xóa đã chọn (<span id="selectedCount">0</span>)
+                    </button>
+                {% endif %}
+                
+                <!-- Add Patient Actions -->
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('patient_onboarding_wizard') }}" class="btn btn-primary">
+                        <i class="fas fa-magic me-1"></i>Hướng dẫn thêm BN
+                    </a>
+                    <a href="{{ url_for('patient_new') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i>Thêm trực tiếp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Selection Info -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <form method="GET" class="d-flex">
+            <input type="text" class="form-control me-2" name="search" 
+                   placeholder="Tìm kiếm theo tên hoặc mã bệnh nhân..." 
+                   value="{{ search }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    {% if current_user.can_delete_patient() %}
+    <div class="col-lg-6">
+        <div id="selectionInfo" class="alert alert-info py-2 px-3 mb-0" style="display: none;">
+            <small>
+                <i class="fas fa-info-circle me-1"></i>
+                <span id="selectionText">Chưa chọn bệnh nhân nào</span>
+            </small>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Patient List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card medical-card">
+            <div class="card-body">
+                {% if patients.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    {% if current_user.can_delete_patient() %}
+                                        <th width="40" class="text-center">
+                                            <input type="checkbox" id="selectAll" class="form-check-input" title="Chọn tất cả bệnh nhân">
+                                            <label for="selectAll" class="small text-muted d-block mt-1">Chọn tất cả</label>
+                                        </th>
+                                    {% endif %}
+                                    <th>{{ t.patient_code }}</th>
+                                    <th>{{ t.full_name }}</th>
+                                    <th>{{ t.age }}</th>
+                                    <th>{{ t.diagnosis_date }}</th>
+                                    <th>{{ t.gleason_score }}</th>
+                                    <th>{{ t.cancer_stage }}</th>
+                                    <th>{{ t.current_treatment }}</th>
+                                    <th>{{ t.actions }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in patients.items %}
+                                <tr>
+                                    {% if current_user.can_delete_patient() %}
+                                        <td class="text-center">
+                                            <input type="checkbox" class="form-check-input patient-checkbox" 
+                                                   value="{{ patient.id }}" name="patient_ids" 
+                                                   title="Chọn bệnh nhân {{ patient.patient_code }}">
+                                        </td>
+                                    {% endif %}
+                                    <td><strong class="text-primary">{{ patient.patient_code }}</strong></td>
+                                    <td>{{ patient.full_name }}</td>
+                                    <td>{{ patient.age }}</td>
+                                    <td>{{ patient.diagnosis_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if patient.gleason_score %}
+                                            <span class="badge bg-info">{{ patient.gleason_score }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if patient.cancer_stage %}
+                                            <span class="badge bg-warning">{{ patient.cancer_stage }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set current_treatment = patient.get_current_treatment() %}
+                                        {% if current_treatment %}
+                                            <span class="badge bg-success">{{ current_treatment.treatment_name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Chưa có</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="{{ t.view }}">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('patient_edit', patient_id=patient.id) }}" 
+                                               class="btn btn-sm btn-outline-secondary" title="{{ t.edit }}">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if current_user.can_delete_patient() %}
+                                                <a href="{{ url_for('patient_delete_confirm', patient_id=patient.id) }}" 
+                                                   class="btn btn-sm btn-outline-danger" title="Xóa bệnh nhân (Admin)">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if patients.pages > 1 %}
+                    <nav aria-label="Patient pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if patients.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('patient_list', page=patients.prev_num, search=search) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in patients.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != patients.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('patient_list', page=page_num, search=search) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if patients.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('patient_list', page=patients.next_num, search=search) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-users fa-4x mb-3"></i>
+                        <h4>{{ t.no_data }}</h4>
+                        <p>{% if search %}Không tìm thấy bệnh nhân nào với từ khóa "{{ search }}"{% else %}Chưa có bệnh nhân nào được thêm vào hệ thống{% endif %}</p>
+                        {% if not search %}
+                        <a href="{{ url_for('patient_new') }}" class="btn btn-primary mt-3">
+                            <i class="fas fa-plus me-1"></i>{{ t.add_patient }}
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if current_user.can_delete_patient() %}
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa bệnh nhân
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>Cảnh báo:</strong> Hành động này sẽ xóa vĩnh viễn <span id="deleteCount">0</span> bệnh nhân và tất cả dữ liệu liên quan (xét nghiệm, điều trị, lịch hẹn, v.v.).
+                </div>
+                <p>Bạn có chắc chắn muốn xóa các bệnh nhân đã chọn?</p>
+                <div id="selectedPatientsList"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                    <i class="fas fa-trash-alt me-1"></i>Xác nhận xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Hidden form for CSRF token -->
+{% if current_user.can_delete_patient() %}
+<div id="csrf-container" style="display: none;" data-csrf="{{ csrf_token._value }}"></div>
+{% endif %}
+
+<script>
+$(document).ready(function() {
+    {% if current_user.can_delete_patient() %}
+    // Handle select all checkbox
+    $('#selectAll').change(function() {
+        $('.patient-checkbox').prop('checked', this.checked);
+        updateDeleteButton();
+    });
+    
+    // Handle individual checkbox changes
+    $('.patient-checkbox').change(function() {
+        updateDeleteButton();
+        
+        // Update select all checkbox state
+        var total = $('.patient-checkbox').length;
+        var checked = $('.patient-checkbox:checked').length;
+        $('#selectAll').prop('indeterminate', checked > 0 && checked < total);
+        $('#selectAll').prop('checked', checked === total);
+    });
+    
+    // Update delete button visibility and count
+    function updateDeleteButton() {
+        var selectedCount = $('.patient-checkbox:checked').length;
+        $('#selectedCount').text(selectedCount);
+        
+        if (selectedCount > 0) {
+            $('#deleteSelectedBtn').show();
+            $('#selectionInfo').show();
+            $('#selectionText').text(`Đã chọn ${selectedCount} bệnh nhân để xóa`);
+        } else {
+            $('#deleteSelectedBtn').hide();
+            $('#selectionInfo').hide();
+            $('#selectionText').text('Chưa chọn bệnh nhân nào');
+        }
+    }
+    
+    // Show delete confirmation modal
+    $('#deleteSelectedBtn').click(function() {
+        var selectedPatients = [];
+        $('.patient-checkbox:checked').each(function() {
+            var row = $(this).closest('tr');
+            {% if current_user.can_delete_patient() %}
+                var patientCode = row.find('td:nth-child(3) strong').text();
+                var patientName = row.find('td:nth-child(4)').text();
+            {% else %}
+                var patientCode = row.find('td:nth-child(2) strong').text();
+                var patientName = row.find('td:nth-child(3)').text();
+            {% endif %}
+            selectedPatients.push({
+                id: $(this).val(),
+                code: patientCode,
+                name: patientName
+            });
+        });
+        
+        $('#deleteCount').text(selectedPatients.length);
+        
+        // Build patient list
+        var patientsList = '<ul class="list-unstyled">';
+        selectedPatients.forEach(function(patient) {
+            patientsList += '<li><i class="fas fa-user me-2"></i>' + patient.code + ' - ' + patient.name + '</li>';
+        });
+        patientsList += '</ul>';
+        $('#selectedPatientsList').html(patientsList);
+        
+        $('#deleteConfirmModal').modal('show');
+    });
+    
+    // Handle confirm delete
+    $('#confirmDeleteBtn').click(function() {
+        var selectedIds = [];
+        $('.patient-checkbox:checked').each(function() {
+            selectedIds.push($(this).val());
+        });
+        
+        if (selectedIds.length > 0) {
+            // Create form and submit
+            var form = $('<form>', {
+                method: 'POST',
+                action: '{{ url_for("bulk_delete_patients") }}'
+            });
+            
+            // Add CSRF token from hidden container
+            var csrfToken = $('#csrf-container').data('csrf');
+            if (csrfToken) {
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'csrf_token',
+                    value: csrfToken
+                }));
+            }
+            
+            // Add selected patient IDs
+            selectedIds.forEach(function(id) {
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'patient_ids',
+                    value: id
+                }));
+            });
+            
+            // Submit form
+            $('body').append(form);
+            form.submit();
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

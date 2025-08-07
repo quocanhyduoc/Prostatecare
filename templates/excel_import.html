@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Nhập bệnh nhân từ Excel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">
+                <i class="fas fa-file-excel me-2"></i>Nhập bệnh nhân từ Excel
+            </h1>
+            <a href="{{ url_for('patient_list') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Trở lại danh sách
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-upload me-2"></i>Tải lên tệp Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.excel_file.label(class="form-label") }}
+                        {{ form.excel_file(class="form-control") }}
+                        {% if form.excel_file.errors %}
+                            <div class="text-danger">
+                                {% for error in form.excel_file.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Hướng dẫn
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Tải mẫu Excel:</h6>
+                <a href="{{ url_for('download_excel_template') }}" class="btn btn-success btn-sm mb-3">
+                    <i class="fas fa-download me-1"></i>Tải mẫu Excel
+                </a>
+                
+                <h6>Yêu cầu tệp Excel:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Định dạng .xlsx</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Có tiêu đề cột</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Dữ liệu bắt đầu từ dòng 2</li>
+                </ul>
+                
+                <h6>Các cột bắt buộc:</h6>
+                <ul class="list-unstyled text-muted small">
+                    <li>• patient_code</li>
+                    <li>• full_name</li>
+                    <li>• date_of_birth (dd/mm/yyyy)</li>
+                    <li>• diagnosis_date (dd/mm/yyyy)</li>
+                    <li>• initial_psa</li>
+                    <li>• gleason_score</li>
+                </ul>
+                
+                <h6>Các cột tùy chọn:</h6>
+                <ul class="list-unstyled text-muted small">
+                    <li>• phone</li>
+                    <li>• address</li>
+                    <li>• insurance_number</li>
+                    <li>• cancer_stage</li>
+                    <li>• clinical_t, clinical_n, clinical_m</li>
+                    <li>• pathological_t, pathological_n, pathological_m</li>
+                    <li>• sampling_method</li>
+                    <li>• sampling_date (dd/mm/yyyy)</li>
+                </ul>
+                
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Lưu ý: Bệnh nhân trùng mã sẽ được bỏ qua.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if import_results %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card medical-card">
+            <div class="card-header medical-card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Kết quả nhập dữ liệu
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="alert alert-info text-center">
+                            <h4>{{ import_results.total }}</h4>
+                            <small>Tổng số dòng</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="alert alert-success text-center">
+                            <h4>{{ import_results.success }}</h4>
+                            <small>Thành công</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="alert alert-warning text-center">
+                            <h4>{{ import_results.skipped }}</h4>
+                            <small>Bỏ qua</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="alert alert-danger text-center">
+                            <h4>{{ import_results.errors }}</h4>
+                            <small>Lỗi</small>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if import_results.error_details %}
+                <div class="mt-3">
+                    <h6>Chi tiết lỗi:</h6>
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            {% for error in import_results.error_details %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if import_results.success > 0 %}
+                <div class="mt-3">
+                    <a href="{{ url_for('patient_list') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Xem danh sách bệnh nhân
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Patient Header -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-md me-2"></i>
+                        Bệnh nhân: {{ patient.full_name }}
+                        <span class="badge bg-light text-primary ms-2">{{ patient.patient_code }}</span>
+                    </h5>
+                </div>
+            </div>
+
+            <!-- Chemotherapy Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-flask me-2"></i>
+                        {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="row g-3">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h6 class="text-danger border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.treatment_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.treatment_name(class="form-control") }}
+                            {% if form.treatment_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.treatment_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.start_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.start_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.end_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.end_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.status.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        
+                        <!-- Chemotherapy Specific Fields -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-danger border-bottom pb-2 mb-3">
+                                <i class="fas fa-vial me-2"></i>Chi tiết hóa trị
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.protocol_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.protocol_name(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.indication.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.indication(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.drug_regimen.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.drug_regimen(class="form-control", rows="3") }}
+                            <div class="form-text">Mô tả chi tiết các thuốc và li용 dùng</div>
+                        </div>
+                        
+                        <!-- Cycle Information -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-danger border-bottom pb-2 mb-3">
+                                <i class="fas fa-sync-alt me-2"></i>Thông tin chu kỳ
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.planned_cycles.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.planned_cycles(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.completed_cycles.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.completed_cycles(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.cycle_length_days.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.cycle_length_days(class="form-control") }}
+                                <span class="input-group-text">ngày</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Response and Monitoring -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-danger border-bottom pb-2 mb-3">
+                                <i class="fas fa-chart-line me-2"></i>Đáp ứng và theo dõi
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.response_assessment.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.response_assessment(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.best_response.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.best_response(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.psa_response.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.psa_response(class="form-control") }}
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.radiographic_response.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.radiographic_response(class="form-select") }}
+                        </div>
+                        
+                        <!-- Toxicity and Side Effects -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-danger border-bottom pb-2 mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Độc tính và tác dụng phụ
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.hematologic_toxicity.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.hematologic_toxicity(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.non_hematologic_toxicity.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.non_hematologic_toxicity(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.adverse_events.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.adverse_events(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.dose_reduction_required(class="form-check-input") }}
+                                {{ form.dose_reduction_required.label(class="form-check-label text-dark") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.discontinuation_reason.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.discontinuation_reason(class="form-select") }}
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-danger border-bottom pb-2 mb-3">
+                                <i class="fas fa-clipboard-list me-2"></i>Thông tin bổ sung
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.notes.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="col-12 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-save me-2"></i>Lưu thông tin
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Chemotherapy form enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Set max date to today for chemotherapy dates
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    
+    dateInputs.forEach(function(input) {
+        if (input.name === 'start_date' || input.name === 'end_date') {
+            input.max = today;
+        }
+    });
+    
+    // Validate completed cycles against planned cycles
+    const plannedCycles = document.getElementById('planned_cycles');
+    const completedCycles = document.getElementById('completed_cycles');
+    
+    if (plannedCycles && completedCycles) {
+        function validateCycles() {
+            const planned = parseInt(plannedCycles.value) || 0;
+            const completed = parseInt(completedCycles.value) || 0;
+            
+            if (completed > planned && planned > 0) {
+                completedCycles.setCustomValidity('Số chu kỳ hoàn thành không được vượt quá số chu kỳ dự kiến');
+            } else {
+                completedCycles.setCustomValidity('');
+            }
+        }
+        
+        plannedCycles.addEventListener('input', validateCycles);
+        completedCycles.addEventListener('input', validateCycles);
+    }
+    
+    // Auto-calculate cycle completion percentage
+    if (plannedCycles && completedCycles) {
+        function updateCycleProgress() {
+            const planned = parseInt(plannedCycles.value) || 0;
+            const completed = parseInt(completedCycles.value) || 0;
+            
+            if (planned > 0) {
+                const percentage = Math.round((completed / planned) * 100);
+                const progressInfo = document.getElementById('cycle-progress-info');
+                if (!progressInfo) {
+                    const infoDiv = document.createElement('div');
+                    infoDiv.id = 'cycle-progress-info';
+                    infoDiv.className = 'form-text text-info';
+                    completedCycles.parentNode.appendChild(infoDiv);
+                }
+                document.getElementById('cycle-progress-info').textContent = 
+                    `Tiến độ: ${percentage}% (${completed}/${planned} chu kỳ)`;
+            }
+        }
+        
+        plannedCycles.addEventListener('input', updateCycleProgress);
+        completedCycles.addEventListener('input', updateCycleProgress);
+        // Initialize on page load
+        updateCycleProgress();
+    }
+    
+    // Validate PSA response percentage
+    const psaResponse = document.getElementById('psa_response');
+    if (psaResponse) {
+        psaResponse.addEventListener('input', function() {
+            const value = parseFloat(this.value) || 0;
+            if (value < -100 || value > 100) {
+                this.setCustomValidity('Tỷ lệ đáp ứng PSA phải từ -100% đến 100%');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+    
+    // Enable/disable discontinuation reason based on status
+    const status = document.getElementById('status');
+    const discontinuationReason = document.getElementById('discontinuation_reason');
+    
+    if (status && discontinuationReason) {
+        function toggleDiscontinuationReason() {
+            const isDiscontinued = status.value === 'DISCONTINUED' || status.value === 'COMPLETED';
+            discontinuationReason.disabled = !isDiscontinued;
+            if (!isDiscontinued) {
+                discontinuationReason.value = '';
+            }
+        }
+        
+        status.addEventListener('change', toggleDiscontinuationReason);
+        // Initialize on page load
+        toggleDiscontinuationReason();
+    }
+});
+</script>
+{% endblock %}

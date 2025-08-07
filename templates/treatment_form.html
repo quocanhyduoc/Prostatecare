@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-pills me-2"></i>{{ title }}
+                </h1>
+                <p class="text-muted mb-0">{{ patient.full_name }} ({{ patient.patient_code }})</p>
+            </div>
+            <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>{{ t.back }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <form method="POST" class="medical-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="card medical-card">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-procedures me-2"></i>Thông tin điều trị
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.treatment_name.id }}" class="form-label">
+                                {{ form.treatment_name.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.treatment_name(class="form-control" + (" is-invalid" if form.treatment_name.errors else "")) }}
+                            {% for error in form.treatment_name.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.start_date.id }}" class="form-label">
+                                {{ form.start_date.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.start_date(class="form-control" + (" is-invalid" if form.start_date.errors else "")) }}
+                            {% for error in form.start_date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.end_date.id }}" class="form-label">
+                                {{ form.end_date.label.text }}
+                            </label>
+                            {{ form.end_date(class="form-control" + (" is-invalid" if form.end_date.errors else "")) }}
+                            {% for error in form.end_date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                {{ form.is_active(class="form-check-input" + (" is-invalid" if form.is_active.errors else "")) }}
+                                <label class="form-check-label" for="{{ form.is_active.id }}">
+                                    {{ form.is_active.label.text }}
+                                </label>
+                                {% for error in form.is_active.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <small class="form-text text-muted">
+                                Chỉ một điều trị có thể được đặt là đang hoạt động tại một thời điểm
+                            </small>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.notes.id }}" class="form-label">
+                                {{ form.notes.label.text }}
+                            </label>
+                            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows="4") }}
+                            {% for error in form.notes.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>{{ t.cancel }}
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>{{ t.save }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

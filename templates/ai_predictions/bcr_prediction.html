@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Dự báo Tái phát Sinh hóa - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-exclamation-triangle text-danger"></i> Dự báo Tái phát Sinh hóa (BCR)</h2>
+                    <p class="text-muted mb-0">Bệnh nhân: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_code }})</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('ai_predictions_dashboard', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Prediction Form -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Tham số Phân tích</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.analysis_type.label(class="form-label") }}
+                            {{ form.analysis_type(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.prediction_horizon.label(class="form-label") }}
+                            {{ form.prediction_horizon(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.include_psa_trend(class="form-check-input") }}
+                                {{ form.include_psa_trend.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.include_surgery_details(class="form-check-input") }}
+                                {{ form.include_surgery_details.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.include_pathology_details(class="form-check-input") }}
+                                {{ form.include_pathology_details.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.additional_psa.label(class="form-label") }}
+                            {{ form.additional_psa(class="form-control", placeholder="Nhập nếu có PSA bổ sung") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.additional_notes.label(class="form-label") }}
+                            {{ form.additional_notes(class="form-control", rows="3", placeholder="Ghi chú bổ sung cho phân tích") }}
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-danger") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Results -->
+        <div class="col-lg-8">
+            {% if prediction_result %}
+                {% if prediction_result.status == 'success' %}
+                    <!-- Risk Score Overview -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Kết quả Dự báo BCR</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center">
+                                    <div class="mb-3">
+                                        <h1 class="display-3 text-danger font-weight-bold">{{ prediction_result.risk_score }}</h1>
+                                        <h6 class="text-muted">Điểm nguy cơ (0-100)</h6>
+                                    </div>
+                                    <div class="progress mb-2" style="height: 20px;">
+                                        <div class="progress-bar bg-danger" style="width: {{ prediction_result.risk_score }}%"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        Mức độ: 
+                                        <span class="badge bg-{{ 'danger' if prediction_result.risk_level == 'high' else 'warning' if prediction_result.risk_level == 'moderate' else 'success' }}">
+                                            {% if prediction_result.risk_level == 'high' %}Cao
+                                            {% elif prediction_result.risk_level == 'moderate' %}Trung bình
+                                            {% else %}Thấp{% endif %}
+                                        </span>
+                                    </small>
+                                </div>
+                                
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="text-center p-3 border rounded">
+                                                <h3 class="text-warning">{{ prediction_result.recurrence_2year }}%</h3>
+                                                <p class="mb-0 text-muted">Nguy cơ tái phát 2 năm</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="text-center p-3 border rounded">
+                                                <h3 class="text-danger">{{ prediction_result.recurrence_5year }}%</h3>
+                                                <p class="mb-0 text-muted">Nguy cơ tái phát 5 năm</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle"></i> Giải thích:</h6>
+                                        <p class="mb-0">{{ prediction_result.explanation }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Factors -->
+                    {% if prediction_result.risk_factors %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Yếu tố Nguy cơ</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for factor in prediction_result.risk_factors %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-dot-circle text-warning me-2"></i>
+                                                <span>{{ factor }}</span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Clinical Recommendations -->
+                    <div class="row">
+                        {% if prediction_result.monitoring_recommendations %}
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0"><i class="fas fa-eye"></i> Khuyến nghị Theo dõi</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            {% for recommendation in prediction_result.monitoring_recommendations %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                                    {{ recommendation }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                        
+                                        <!-- Action Button for Appointments -->
+                                        <div class="mt-3">
+                                            <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}">
+                                                <input type="hidden" name="recommendation_type" value="bcr_followup">
+                                                <input type="hidden" name="prediction_data" value="{{ prediction_result | tojson }}">
+                                                <input type="hidden" name="next" value="{{ request.url }}">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-calendar-plus"></i> Tạo lịch theo dõi
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if prediction_result.intervention_suggestions %}
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="fas fa-medical"></i> Can thiệp Đề xuất</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            {% for suggestion in prediction_result.intervention_suggestions %}
+                                                <li class="mb-2">
+                                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                                    {{ suggestion }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                        
+                                        <!-- Action Button for Blood Tests -->
+                                        <div class="mt-3">
+                                            <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}">
+                                                <input type="hidden" name="recommendation_type" value="blood_test">
+                                                <input type="hidden" name="prediction_data" value="{{ prediction_result | tojson }}">
+                                                <input type="hidden" name="next" value="{{ request.url }}">
+                                                <button type="submit" class="btn btn-info btn-sm">
+                                                    <i class="fas fa-vial"></i> Lên lịch xét nghiệm
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Model Information -->
+                    <div class="card mt-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="fas fa-info"></i> Thông tin Mô hình</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Mô hình AI:</strong> {{ prediction_result.model_version }}<br>
+                                        <strong>Thời gian phân tích:</strong> {{ prediction_result.prediction_date[:19] | replace('T', ' ') }}
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-warning alert-sm">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Lưu ý:</strong> Kết quả dự báo chỉ mang tính tham khảo và cần được đánh giá bởi bác sĩ chuyên khoa.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <!-- Error Display -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-danger">
+                                <h5><i class="fas fa-exclamation-circle"></i> Lỗi Phân tích</h5>
+                                <p class="mb-0">{{ prediction_result.message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Initial State -->
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-brain fa-5x text-muted mb-4"></i>
+                        <h4 class="text-muted">Sẵn sàng Phân tích BCR</h4>
+                        <p class="text-muted">
+                            Điều chỉnh các tham số phân tích bên trái và nhấn "Phân tích Nguy cơ BCR" để bắt đầu.
+                        </p>
+                        <div class="alert alert-info">
+                            <strong>Dự báo Tái phát Sinh hóa (BCR)</strong> sử dụng AI để phân tích nguy cơ tái phát dựa trên:
+                            <ul class="mt-2 mb-0 text-start">
+                                <li>Thông tin lâm sàng và mô bệnh học</li>
+                                <li>Xu hướng PSA sau điều trị</li>
+                                <li>Chi tiết phẫu thuật và bờ phẫu thuật</li>
+                                <li>Các yếu tố nguy cơ khác</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.display-3 {
+    font-weight: 700;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+@media (max-width: 768px) {
+    .display-3 {
+        font-size: 2.5rem;
+    }
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Smooth animations for cards
+    $('.card').hide().fadeIn(1000);
+    
+    // Progress bar animation
+    $('.progress-bar').css('width', '0%').animate({
+        width: '{{ prediction_result.risk_score if prediction_result and prediction_result.status == "success" else 0 }}%'
+    }, 2000);
+});
+</script>
+{% endblock %}

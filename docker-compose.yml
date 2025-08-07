@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgresql://postgres:password@db:5432/prostate_care
+      - SESSION_SECRET=your-session-secret-here
+      - GEMINI_API_KEY=your-gemini-api-key
+    depends_on:
+      - db
+    volumes:
+      - ./images:/app/images
+      - ./static/uploads:/app/static/uploads
+
+  db:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=prostate_care
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

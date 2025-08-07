@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch trình thuốc - {{ medication.drug_name }} - Quản lý bệnh nhân ung thư tuyến tiền liệt{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">{{ t.dashboard }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('patient_detail', patient_id=medication.treatment.patient_id) }}">{{ medication.treatment.patient.full_name }}</a></li>
+            <li class="breadcrumb-item active">Lịch trình thuốc</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1">
+                <i class="fas fa-calendar-alt me-2"></i>Lịch trình thuốc
+            </h4>
+            <p class="text-muted mb-0">
+                <strong>{{ medication.drug_name }}</strong> - {{ medication.treatment.patient.full_name }}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('medication_schedule_new', medication_id=medication.id) }}" 
+               class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Tạo lịch trình mới
+            </a>
+            <a href="{{ url_for('patient_detail', patient_id=medication.treatment.patient_id) }}" 
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{{ t.back }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Medication Info Card -->
+    <div class="card medical-card mb-4">
+        <div class="card-header medical-card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-pills me-2"></i>Thông tin thuốc
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Tên thuốc:</strong><br>
+                    <span class="text-primary">{{ medication.drug_name }}</span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Liều lượng:</strong><br>
+                    {{ medication.dosage or 'Không có' }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Tần suất:</strong><br>
+                    {{ medication.frequency or 'Không có' }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Trạng thái:</strong><br>
+                    {% if medication.is_active %}
+                        <span class="badge bg-success">Đang sử dụng</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Đã ngưng</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedules List -->
+    <div class="card medical-card">
+        <div class="card-header medical-card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-list me-2"></i>Danh sách lịch trình ({{ schedules|length }} lần)
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if schedules %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Ngày dự kiến</th>
+                                <th>Ngày thực tế</th>
+                                <th>Trạng thái</th>
+                                <th>Liều lượng</th>
+                                <th>Ghi chú</th>
+                                <th class="text-center">{{ t.actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in schedules %}
+                            <tr class="{% if schedule.is_overdue %}table-danger{% elif schedule.status == 'PENDING' %}table-warning{% endif %}">
+                                <td>
+                                    <strong>{{ schedule.scheduled_date.strftime('%d/%m/%Y') }}</strong>
+                                    {% if schedule.is_overdue %}
+                                        <br><small class="text-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Quá hạn
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if schedule.administered_date %}
+                                        {{ schedule.administered_date.strftime('%d/%m/%Y') }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if schedule.status == 'PENDING' %}
+                                        <span class="badge bg-warning">Chờ xử lý</span>
+                                    {% elif schedule.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Đã xử lý</span>
+                                    {% elif schedule.status == 'POSTPONED' %}
+                                        <span class="badge bg-danger">Hoãn</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ schedule.dosage_given or schedule.medication.dosage or '-' }}</td>
+                                <td>
+                                    {% if schedule.administration_notes %}
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                              title="{{ schedule.administration_notes }}">
+                                            {{ schedule.administration_notes }}
+                                        </span>
+                                    {% elif schedule.postpone_reason %}
+                                        <span class="text-danger text-truncate d-inline-block" style="max-width: 200px;" 
+                                              title="{{ schedule.postpone_reason }}">
+                                            <i class="fas fa-pause-circle me-1"></i>{{ schedule.postpone_reason }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('medication_schedule_edit', schedule_id=schedule.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if schedule.status == 'PENDING' %}
+                                            <form method="POST" 
+                                                  action="{{ url_for('medication_schedule_complete', schedule_id=schedule.id) }}" 
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Đánh dấu hoàn thành và tạo lịch tiếp theo?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Hoàn thành">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Statistics -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-warning">{{ schedules|selectattr('status', 'equalto', 'PENDING')|list|length }}</h5>
+                            <small class="text-muted">Chờ xử lý</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-success">{{ schedules|selectattr('status', 'equalto', 'COMPLETED')|list|length }}</h5>
+                            <small class="text-muted">Đã hoàn thành</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-danger">{{ schedules|selectattr('status', 'equalto', 'POSTPONED')|list|length }}</h5>
+                            <small class="text-muted">Đã hoãn</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h5 class="text-primary">{{ schedules|length }}</h5>
+                            <small class="text-muted">Tổng cộng</small>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                    <h5>Chưa có lịch trình nào</h5>
+                    <p>Tạo lịch trình đầu tiên cho thuốc này</p>
+                    <a href="{{ url_for('medication_schedule_new', medication_id=medication.id) }}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Tạo lịch trình
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

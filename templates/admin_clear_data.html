@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Xóa toàn bộ dữ liệu - Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Danger Warning Header -->
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        CẢNH BÁO NGHIÊM TRỌNG: XÓA TOÀN BỘ DỮ LIỆU
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Current Data Overview -->
+                    <div class="alert alert-warning">
+                        <h5><i class="fas fa-database me-2"></i>Thống kê dữ liệu hiện tại:</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-white rounded">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h4 class="text-primary">{{ patient_count }}</h4>
+                                    <small class="text-muted">Bệnh nhân</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-white rounded">
+                                    <i class="fas fa-vial fa-2x text-success mb-2"></i>
+                                    <h4 class="text-success">{{ blood_test_count }}</h4>
+                                    <small class="text-muted">Xét nghiệm máu</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-white rounded">
+                                    <i class="fas fa-pills fa-2x text-info mb-2"></i>
+                                    <h4 class="text-info">{{ treatment_count }}</h4>
+                                    <small class="text-muted">Phác đồ điều trị</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 bg-white rounded">
+                                    <i class="fas fa-calendar-alt fa-2x text-warning mb-2"></i>
+                                    <h4 class="text-warning">{{ appointment_count }}</h4>
+                                    <small class="text-muted">Lịch hẹn</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legal and Technical Warnings -->
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-skull-crossbones me-2"></i>Hành động này sẽ XÓA VĨNH VIỄN:</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="mb-0">
+                                    <li><strong>Tất cả bệnh nhân</strong> và thông tin cá nhân</li>
+                                    <li><strong>Toàn bộ xét nghiệm máu</strong> và kết quả PSA</li>
+                                    <li><strong>Lịch sử điều trị</strong> và phác đồ</li>
+                                    <li><strong>Tất cả lịch hẹn</strong> và theo dõi</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="mb-0">
+                                    <li><strong>Sự kiện y tế</strong> và tác dụng phụ</li>
+                                    <li><strong>Kết quả chẩn đoán hình ảnh</strong></li>
+                                    <li><strong>Phân tích AI</strong> và khuyến nghị</li>
+                                    <li><strong>Tất cả dữ liệu thống kê</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legal Notice -->
+                    <div class="alert alert-dark">
+                        <h6><i class="fas fa-gavel me-2"></i>Thông báo pháp lý:</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Vi phạm quy định:</strong> Xóa hồ sơ y tế có thể vi phạm luật lưu trữ hồ sơ bệnh án</li>
+                            <li><strong>Không thể khôi phục:</strong> Tất cả dữ liệu sẽ bị mất vĩnh viễn, không có cách nào khôi phục</li>
+                            <li><strong>Trách nhiệm pháp lý:</strong> Người thực hiện chịu toàn bộ trách nhiệm pháp lý</li>
+                            <li><strong>Sao lưu:</strong> Đảm bảo đã tạo bản sao lưu nếu cần thiết</li>
+                        </ul>
+                    </div>
+
+                    <!-- Admin Information -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-shield-alt me-2"></i>Thông tin người thực hiện:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Tên đăng nhập:</strong> {{ current_user.username }}</p>
+                                <p class="mb-0"><strong>Họ tên:</strong> {{ current_user.full_name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Vai trò:</strong> <span class="badge bg-danger">{{ current_user.role.upper() }}</span></p>
+                                <p class="mb-0"><strong>Thời gian:</strong> {{ moment().format('DD/MM/YYYY HH:mm:ss') }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if patient_count > 0 %}
+                    <!-- Confirmation Form -->
+                    <div class="alert alert-light border-3 border-danger">
+                        <form method="POST" onsubmit="return confirmDeletion();">
+                            <h6><i class="fas fa-keyboard me-2"></i>Xác nhận bằng cách nhập mã:</h6>
+                            <p class="text-danger"><strong>Nhập chính xác:</strong> <code>DELETE_ALL_DATA</code></p>
+                            
+                            <div class="input-group mb-3">
+                                <input type="text" name="confirm" class="form-control form-control-lg" 
+                                       placeholder="Nhập mã xác nhận..." 
+                                       autocomplete="off" 
+                                       required>
+                                <button type="submit" class="btn btn-danger btn-lg">
+                                    <i class="fas fa-trash-alt me-2"></i>
+                                    XÓA TOÀN BỘ DỮ LIỆU
+                                </button>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmUndertanding" required>
+                                <label class="form-check-label small" for="confirmUndertanding">
+                                    Tôi hiểu rõ hành động này không thể hoàn tác và chịu toàn bộ trách nhiệm pháp lý
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    {% else %}
+                    <!-- No Data Message -->
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-check-circle me-2"></i>Hệ thống đã sạch</h5>
+                        <p class="mb-0">Hiện tại không có dữ liệu bệnh nhân nào trong hệ thống.</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg w-100">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Quay lại Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('patient_list') }}" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="fas fa-users me-2"></i>
+                                Xem danh sách bệnh nhân
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Alternative Actions -->
+                    <hr class="my-4">
+                    <div class="text-center">
+                        <h6 class="text-muted">Các lựa chọn khác:</h6>
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('export_patients') }}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-download me-1"></i>
+                                Sao lưu dữ liệu trước khi xóa
+                            </a>
+                            <button type="button" class="btn btn-outline-warning btn-sm" disabled>
+                                <i class="fas fa-archive me-1"></i>
+                                Lưu trữ thay vì xóa (Sắp có)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDeletion() {
+    var confirmText = document.querySelector('input[name="confirm"]').value;
+    if (confirmText !== 'DELETE_ALL_DATA') {
+        alert('Vui lòng nhập chính xác mã xác nhận: DELETE_ALL_DATA');
+        return false;
+    }
+    
+    var isConfirmed = confirm(
+        '⚠️ XÁC NHẬN CUỐI CÙNG ⚠️\n\n' +
+        'Bạn sắp XÓA TOÀN BỘ DỮ LIỆU của {{ patient_count }} bệnh nhân!\n\n' +
+        'Hành động này:\n' +
+        '• KHÔNG THỂ HOÀN TÁC\n' +
+        '• XÓA TẤT CẢ dữ liệu y tế\n' +
+        '• CÓ THỂ VI PHẠM quy định pháp lý\n\n' +
+        'Bạn có THỰC SỰ muốn tiếp tục?'
+    );
+    
+    if (isConfirmed) {
+        // Show loading state
+        var button = document.querySelector('button[type="submit"]');
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xóa...';
+        button.disabled = true;
+        return true;
+    }
+    
+    return false;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Patient Header -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-md me-2"></i>
+                        Bệnh nhân: {{ patient.full_name }}
+                        <span class="badge bg-light text-primary ms-2">{{ patient.patient_code }}</span>
+                    </h5>
+                </div>
+            </div>
+
+            <!-- Hormone Therapy Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-pills me-2"></i>
+                        {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="row g-3">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="col-12">
+                            <h6 class="text-info border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.treatment_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.treatment_name(class="form-control") }}
+                            {% if form.treatment_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.treatment_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.start_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.start_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.end_date.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.end_date(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.status.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+                        
+                        <!-- Hormone Therapy Specific Fields -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-info border-bottom pb-2 mb-3">
+                                <i class="fas fa-capsules me-2"></i>Chi tiết liệu pháp nội tiết
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.therapy_type.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.therapy_type(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.adt_type.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.adt_type(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.drug_name.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.drug_name(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.dosage.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.dosage(class="form-control") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.administration_route.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.administration_route(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.injection_frequency.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.injection_frequency(class="form-select") }}
+                        </div>
+                        
+                        <!-- Intermittent Therapy -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-info border-bottom pb-2 mb-3">
+                                <i class="fas fa-clock me-2"></i>Liệu pháp gián đoạn
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                {{ form.is_intermittent(class="form-check-input") }}
+                                {{ form.is_intermittent.label(class="form-check-label text-dark") }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.cycle_duration_months.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.cycle_duration_months(class="form-control") }}
+                                <span class="input-group-text">tháng</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.break_duration_months.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.break_duration_months(class="form-control") }}
+                                <span class="input-group-text">tháng</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Monitoring and Response -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-info border-bottom pb-2 mb-3">
+                                <i class="fas fa-chart-line me-2"></i>Theo dõi và đáp ứng
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.psa_nadir.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.psa_nadir(class="form-control") }}
+                                <span class="input-group-text">ng/mL</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.testosterone_suppression.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.testosterone_suppression(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {{ form.duration_months.label(class="form-label text-dark fw-semibold") }}
+                            <div class="input-group">
+                                {{ form.duration_months(class="form-control") }}
+                                <span class="input-group-text">tháng</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Side Effects -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-info border-bottom pb-2 mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Tác dụng phụ
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.side_effects.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.side_effects(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {{ form.quality_of_life_impact.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.quality_of_life_impact(class="form-select") }}
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-info border-bottom pb-2 mb-3">
+                                <i class="fas fa-clipboard-list me-2"></i>Thông tin bổ sung
+                            </h6>
+                        </div>
+                        
+                        <div class="col-12">
+                            {{ form.notes.label(class="form-label text-dark fw-semibold") }}
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="col-12 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </a>
+                                <button type="submit" class="btn btn-info text-white">
+                                    <i class="fas fa-save me-2"></i>Lưu thông tin
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Hormone therapy form enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Set max date to today for therapy dates
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    const today = new Date().toISOString().split('T')[0];
+    
+    dateInputs.forEach(function(input) {
+        if (input.name === 'start_date' || input.name === 'end_date') {
+            input.max = today;
+        }
+    });
+    
+    // Toggle intermittent therapy fields
+    const isIntermittent = document.getElementById('is_intermittent');
+    const cycleDuration = document.getElementById('cycle_duration_months');
+    const breakDuration = document.getElementById('break_duration_months');
+    
+    if (isIntermittent && cycleDuration && breakDuration) {
+        function toggleIntermittentFields() {
+            const disabled = !isIntermittent.checked;
+            cycleDuration.disabled = disabled;
+            breakDuration.disabled = disabled;
+            
+            if (disabled) {
+                cycleDuration.value = '';
+                breakDuration.value = '';
+            }
+        }
+        
+        isIntermittent.addEventListener('change', toggleIntermittentFields);
+        // Initialize on page load
+        toggleIntermittentFields();
+    }
+    
+    // Auto-calculate treatment duration from start and end dates
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const durationMonths = document.getElementById('duration_months');
+    
+    if (startDate && endDate && durationMonths) {
+        function calculateDuration() {
+            if (startDate.value && endDate.value) {
+                const start = new Date(startDate.value);
+                const end = new Date(endDate.value);
+                const diffTime = Math.abs(end - start);
+                const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44));
+                durationMonths.value = diffMonths;
+            }
+        }
+        
+        startDate.addEventListener('change', calculateDuration);
+        endDate.addEventListener('change', calculateDuration);
+    }
+    
+    // Validate PSA nadir value
+    const psaNadir = document.getElementById('psa_nadir');
+    if (psaNadir) {
+        psaNadir.addEventListener('input', function() {
+            const value = parseFloat(this.value) || 0;
+            if (value < 0) {
+                this.setCustomValidity('Giá trị PSA nadir không thể âm');
+            } else if (value > 1000) {
+                this.setCustomValidity('Giá trị PSA nadir có vẻ quá cao');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

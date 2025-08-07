@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Theo dõi và Biến cố - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-chart-line text-primary"></i> Theo dõi và Biến cố Bất lợi</h2>
+                    <p class="text-muted mb-0">Bệnh nhân: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_code }})</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-tools"></i> Thao tác nhanh</h5>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('psa_analysis', patient_id=patient.id) }}" class="btn btn-primary">
+                            <i class="fas fa-chart-area"></i> Phân tích PSA
+                        </a>
+                        <a href="{{ url_for('add_adverse_event', patient_id=patient.id) }}" class="btn btn-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Thêm biến cố
+                        </a>
+                        <a href="{{ url_for('adverse_events_list', patient_id=patient.id) }}" class="btn btn-info">
+                            <i class="fas fa-list"></i> Xem tất cả biến cố
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- PSA Analysis Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Phân tích PSA</h5>
+                </div>
+                <div class="card-body">
+                    {% if psa_analysis.status == 'success' %}
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="text-center">
+                                    <h4 class="text-primary">{{ "%.1f"|format(psa_analysis.current_psa) }}</h4>
+                                    <small class="text-muted">PSA hiện tại (ng/mL)</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                {% if psa_analysis.doubling_time %}
+                                    <div class="text-center">
+                                        <h4 class="text-info">{{ "%.1f"|format(psa_analysis.doubling_time) }}</h4>
+                                        <small class="text-muted">Thời gian nhân đôi (tháng)</small>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center">
+                                        <h4 class="text-muted">--</h4>
+                                        <small class="text-muted">Thời gian nhân đôi</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <strong>Mức độ nguy cơ:</strong>
+                            {% if psa_analysis.risk_level == 'high' %}
+                                <span class="badge bg-danger">Cao</span>
+                            {% elif psa_analysis.risk_level == 'moderate' %}
+                                <span class="badge bg-warning">Trung bình</span>
+                            {% else %}
+                                <span class="badge bg-success">Thấp</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if psa_analysis.alerts %}
+                            <div class="alert alert-warning">
+                                <strong>Cảnh báo:</strong>
+                                <ul class="mb-0">
+                                    {% for alert in psa_analysis.alerts %}
+                                        <li>{{ alert }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        {% if psa_analysis.ai_analysis %}
+                            <div class="alert alert-info">
+                                <strong>Phân tích AI:</strong>
+                                <p class="mb-0">{{ psa_analysis.ai_analysis }}</p>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-3x mb-3"></i>
+                            <p>{{ psa_analysis.message or 'Chưa có dữ liệu PSA để phân tích' }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('psa_analysis', patient_id=patient.id) }}" class="btn btn-primary btn-sm">
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Follow-up Schedule Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Lịch tái khám</h5>
+                </div>
+                <div class="card-body">
+                    {% if followup_schedule.next_date %}
+                        <div class="text-center mb-3">
+                            <h4 class="text-success">{{ followup_schedule.next_date.strftime('%d/%m/%Y') }}</h4>
+                            <small class="text-muted">Ngày tái khám tiếp theo</small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Lý do:</strong> {{ followup_schedule.reason }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Chu kỳ:</strong> {{ followup_schedule.interval }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Mức độ ưu tiên:</strong>
+                            {% if followup_schedule.priority == 'high' %}
+                                <span class="badge bg-danger">Cao</span>
+                            {% elif followup_schedule.priority == 'moderate' %}
+                                <span class="badge bg-warning">Trung bình</span>
+                            {% else %}
+                                <span class="badge bg-success">Thấp</span>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                            <p>Chưa có lịch tái khám được lên</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="#" class="btn btn-success btn-sm">
+                        Lên lịch tái khám
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Adverse Events Summary -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Biến cố Bất lợi Gần đây</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_adverse_events %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày</th>
+                                        <th>Biến cố</th>
+                                        <th>Độ nặng</th>
+                                        <th>Điều trị</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in recent_adverse_events %}
+                                        <tr>
+                                            <td>{{ event.onset_date.strftime('%d/%m/%Y') }}</td>
+                                            <td>{{ event.event_name }}</td>
+                                            <td>
+                                                {% if event.ctcae_grade|int >= 3 %}
+                                                    <span class="badge bg-danger">Độ {{ event.ctcae_grade }}</span>
+                                                {% elif event.ctcae_grade|int == 2 %}
+                                                    <span class="badge bg-warning">Độ {{ event.ctcae_grade }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">Độ {{ event.ctcae_grade }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ event.treatment_type|title }}</td>
+                                            <td>
+                                                {% if event.is_ongoing %}
+                                                    <span class="badge bg-danger">Đang diễn ra</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Đã hết</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <p>Chưa có biến cố bất lợi nào được ghi nhận</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('adverse_events_list', patient_id=patient.id) }}" class="btn btn-warning btn-sm">
+                        Xem tất cả biến cố
+                    </a>
+                    <a href="{{ url_for('add_adverse_event', patient_id=patient.id) }}" class="btn btn-outline-warning btn-sm">
+                        Thêm biến cố mới
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Tóm tắt An toàn</h5>
+                </div>
+                <div class="card-body">
+                    {% if adverse_events_summary.total_events %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Tổng biến cố:</span>
+                                <strong>{{ adverse_events_summary.total_events }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Độ nặng cao:</span>
+                                <strong class="text-danger">{{ adverse_events_summary.high_grade_events or 0 }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Đang diễn ra:</span>
+                                <strong class="text-warning">{{ adverse_events_summary.ongoing_events }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-sm {{ 'alert-danger' if adverse_events_summary.safety_level == 'Cần theo dõi chặt chẽ' else 'alert-warning' if adverse_events_summary.safety_level == 'Cần theo dõi' else 'alert-success' }}">
+                            <strong>Mức độ an toàn:</strong><br>
+                            {{ adverse_events_summary.safety_level }}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-success">
+                            <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                            <p class="mb-0">An toàn tốt</p>
+                            <small class="text-muted">Chưa có biến cố bất lợi</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.alert-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.btn-group .btn {
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Quản lý bệnh nhân ung thư tuyến tiền liệt{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">{{ t.dashboard }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('patient_detail', patient_id=treatment.patient_id) }}">{{ treatment.patient.full_name }}</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card medical-card">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-pills me-2"></i>{{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Treatment Info -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="fas fa-stethoscope me-2"></i>Thông tin điều trị</h6>
+                        <p class="mb-1"><strong>Phác đồ:</strong> {{ treatment.treatment_name }}</p>
+                        <p class="mb-1"><strong>Bệnh nhân:</strong> {{ treatment.patient.full_name }} ({{ treatment.patient.patient_code }})</p>
+                        <p class="mb-0"><strong>Ngày bắt đầu:</strong> {{ treatment.start_date.strftime('%d/%m/%Y') }}</p>
+                    </div>
+
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.drug_name.label(class="form-label") }}
+                            {{ form.drug_name(class="form-control" + (" is-invalid" if form.drug_name.errors else "")) }}
+                            {% if form.drug_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.drug_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.dosage.label(class="form-label") }}
+                                {{ form.dosage(class="form-control" + (" is-invalid" if form.dosage.errors else "")) }}
+                                {% if form.dosage.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.dosage.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.frequency.label(class="form-label") }}
+                                {{ form.frequency(class="form-control" + (" is-invalid" if form.frequency.errors else "")) }}
+                                {% if form.frequency.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.frequency.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.route.label(class="form-label") }}
+                                {{ form.route(class="form-select" + (" is-invalid" if form.route.errors else "")) }}
+                                {% if form.route.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.route.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.start_date.label(class="form-label") }}
+                                {{ form.start_date(class="form-control" + (" is-invalid" if form.start_date.errors else "")) }}
+                                {% if form.start_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.start_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.end_date.label(class="form-label") }}
+                                {{ form.end_date(class="form-control" + (" is-invalid" if form.end_date.errors else "")) }}
+                                {% if form.end_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.end_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    {{ form.is_active(class="form-check-input" + (" is-invalid" if form.is_active.errors else "")) }}
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                    {% if form.is_active.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.is_active.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="4") }}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('patient_detail', patient_id=treatment.patient_id) }}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>{{ t.back }}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{{ t.save }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card medical-card">
+                <div class="card-header medical-card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Hướng dẫn sử dụng
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-light">
+                        <h6 class="alert-heading">Thông tin cần thiết:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Tên thuốc:</strong> Bắt buộc</li>
+                            <li><strong>Liều lượng:</strong> VD: 3.6mg, 50mg</li>
+                            <li><strong>Tần suất:</strong> VD: 1 lần/tháng</li>
+                            <li><strong>Đường dùng:</strong> Tiêm, uống, v.v.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">Thuốc phổ biến:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Zoladex 3.6mg:</strong> Tiêm dưới da, 1 lần/tháng</li>
+                            <li><strong>Lupron 7.5mg:</strong> Tiêm bắp, 1 lần/tháng</li>
+                            <li><strong>Bicalutamide 50mg:</strong> Uống, 1 lần/ngày</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Lưu ý:</h6>
+                        <ul class="mb-0">
+                            <li>Kiểm tra ngày bắt đầu</li>
+                            <li>Đánh dấu "Đang sử dụng" nếu chưa ngưng</li>
+                            <li>Ghi chú chi tiết giúp theo dõi</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

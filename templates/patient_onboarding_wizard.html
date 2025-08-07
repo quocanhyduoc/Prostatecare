@@ -1,0 +1,622 @@
+{% extends "base.html" %}
+
+{% block title %}Hướng dẫn thêm bệnh nhân mới{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body bg-gradient-primary text-white rounded">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h2 class="mb-0">
+                                <i class="fas fa-user-plus me-2"></i>Hướng dẫn thêm bệnh nhân mới
+                            </h2>
+                            <p class="mb-0 mt-2 opacity-90">Quy trình từng bước với đánh giá nguy cơ tự động</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="wizard-progress">
+                                <span class="step-counter">Bước <span id="current-step">1</span>/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body py-3">
+                    <div class="progress-wrapper">
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" id="wizard-progress" role="progressbar" style="width: 20%"></div>
+                        </div>
+                        <div class="step-labels mt-2">
+                            <div class="row text-center small">
+                                <div class="col step-label active" data-step="1">
+                                    <i class="fas fa-user-circle"></i><br>Thông tin cá nhân
+                                </div>
+                                <div class="col step-label" data-step="2">
+                                    <i class="fas fa-stethoscope"></i><br>Chẩn đoán
+                                </div>
+                                <div class="col step-label" data-step="3">
+                                    <i class="fas fa-dna"></i><br>TNM Staging
+                                </div>
+                                <div class="col step-label" data-step="4">
+                                    <i class="fas fa-flask"></i><br>Xét nghiệm
+                                </div>
+                                <div class="col step-label" data-step="5">
+                                    <i class="fas fa-robot"></i><br>Đánh giá AI
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wizard Form -->
+            <form id="wizard-form" method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+
+                <!-- Step 1: Personal Information -->
+                <div class="wizard-step active" id="step-1">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-circle text-primary me-2"></i>Bước 1: Thông tin cá nhân
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.patient_code.label(class="form-label required") }}
+                                        {{ form.patient_code(class="form-control") }}
+                                        <div class="form-text">Mã định danh duy nhất cho bệnh nhân</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.full_name.label(class="form-label required") }}
+                                        {{ form.full_name(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.date_of_birth.label(class="form-label required") }}
+                                        {{ form.date_of_birth(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.phone.label(class="form-label") }}
+                                        {{ form.phone(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.insurance_number.label(class="form-label") }}
+                                        {{ form.insurance_number(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                {{ form.address.label(class="form-label") }}
+                                {{ form.address(class="form-control") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Diagnosis Information -->
+                <div class="wizard-step" id="step-2">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-stethoscope text-primary me-2"></i>Bước 2: Thông tin chẩn đoán
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.diagnosis_date.label(class="form-label required") }}
+                                        {{ form.diagnosis_date(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.initial_psa.label(class="form-label") }}
+                                        <div class="input-group">
+                                            {{ form.initial_psa(class="form-control") }}
+                                            <span class="input-group-text">ng/mL</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.gleason_score.label(class="form-label") }}
+                                        {{ form.gleason_score(class="form-control") }}
+                                        <div class="form-text">Ví dụ: 3+4=7, 4+5=9</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.cancer_stage.label(class="form-label") }}
+                                        {{ form.cancer_stage(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.sampling_method.label(class="form-label") }}
+                                        {{ form.sampling_method(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.sampling_date.label(class="form-label") }}
+                                        {{ form.sampling_date(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: TNM Staging -->
+                <div class="wizard-step" id="step-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-dna text-primary me-2"></i>Bước 3: Phân giai đoạn TNM
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Thông tin TNM giúp đánh giá chính xác giai đoạn ung thư và đưa ra khuyến nghị điều trị phù hợp.
+                            </div>
+                            
+                            <h6 class="text-primary mb-3">TNM Lâm sàng</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.clinical_t.label(class="form-label") }}
+                                        {{ form.clinical_t(class="form-control") }}
+                                        <div class="form-text">T1, T2, T3, T4</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.clinical_n.label(class="form-label") }}
+                                        {{ form.clinical_n(class="form-control") }}
+                                        <div class="form-text">N0, N1, N2, N3</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.clinical_m.label(class="form-label") }}
+                                        {{ form.clinical_m(class="form-control") }}
+                                        <div class="form-text">M0, M1a, M1b, M1c</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="text-primary mb-3">TNM Giải phẫu bệnh</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.pathological_t.label(class="form-label") }}
+                                        {{ form.pathological_t(class="form-control") }}
+                                        <div class="form-text">pT1, pT2, pT3, pT4</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.pathological_n.label(class="form-label") }}
+                                        {{ form.pathological_n(class="form-control") }}
+                                        <div class="form-text">pN0, pN1, pN2, pN3</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        {{ form.pathological_m.label(class="form-label") }}
+                                        {{ form.pathological_m(class="form-control") }}
+                                        <div class="form-text">pM0, pM1a, pM1b, pM1c</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Initial Blood Test -->
+                <div class="wizard-step" id="step-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-flask text-primary me-2"></i>Bước 4: Xét nghiệm ban đầu (Tùy chọn)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Có thể bỏ qua bước này và thêm kết quả xét nghiệm sau khi tạo hồ sơ bệnh nhân.
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày xét nghiệm</label>
+                                        <input type="date" class="form-control" id="initial_test_date" name="initial_test_date">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">PSA tổng</label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" class="form-control" id="initial_total_psa" name="initial_total_psa" placeholder="0.00">
+                                            <span class="input-group-text">ng/mL</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">PSA tự do</label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" class="form-control" id="initial_free_psa" name="initial_free_psa" placeholder="0.00">
+                                            <span class="input-group-text">ng/mL</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Testosterone</label>
+                                        <div class="input-group">
+                                            <input type="number" step="1" class="form-control" id="initial_testosterone" name="initial_testosterone" placeholder="0">
+                                            <span class="input-group-text">ng/dL</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: AI Risk Assessment -->
+                <div class="wizard-step" id="step-5">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-robot text-primary me-2"></i>Bước 5: Đánh giá nguy cơ tự động
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+                                <div class="mb-4">
+                                    <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                                    <h5>Đánh giá nguy cơ bằng trí tuệ nhân tạo</h5>
+                                    <p class="text-muted">Hệ thống sẽ phân tích thông tin bệnh nhân và đưa ra đánh giá nguy cơ tự động dựa trên các thông số lâm sàng.</p>
+                                </div>
+                                
+                                <div class="form-check form-switch d-flex justify-content-center mb-4">
+                                    <input class="form-check-input me-2" type="checkbox" id="enable_ai_assessment" checked>
+                                    <label class="form-check-label" for="enable_ai_assessment">
+                                        Bật đánh giá AI tự động
+                                    </label>
+                                </div>
+
+                                <div id="ai-preview" class="alert alert-light border">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    <span>Đang chuẩn bị phân tích dữ liệu...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-secondary" id="prev-btn" disabled>
+                                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                                </button>
+                            </div>
+                            <div class="col-6 text-end">
+                                <button type="button" class="btn btn-primary" id="next-btn">
+                                    Tiếp theo <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                                <button type="submit" class="btn btn-success d-none" id="submit-btn">
+                                    <i class="fas fa-user-plus me-2"></i>Tạo bệnh nhân
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.wizard-progress {
+    background: rgba(255,255,255,0.2);
+    padding: 0.5rem 1rem;
+    rounded: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.step-counter {
+    color: white;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.wizard-step {
+    display: none;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+.step-label {
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.step-label.active {
+    opacity: 1;
+    color: var(--bs-primary);
+    font-weight: 500;
+}
+
+.step-label.completed {
+    opacity: 1;
+    color: var(--bs-success);
+}
+
+.progress-wrapper {
+    position: relative;
+}
+
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#ai-preview {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const wizard = new PatientOnboardingWizard();
+    wizard.init();
+});
+
+class PatientOnboardingWizard {
+    constructor() {
+        this.currentStep = 1;
+        this.totalSteps = 5;
+        this.formData = {};
+    }
+
+    init() {
+        this.bindEvents();
+        this.updateProgress();
+        this.validateCurrentStep();
+    }
+
+    bindEvents() {
+        document.getElementById('next-btn').addEventListener('click', () => this.nextStep());
+        document.getElementById('prev-btn').addEventListener('click', () => this.prevStep());
+        
+        // Step label navigation
+        document.querySelectorAll('.step-label').forEach(label => {
+            label.addEventListener('click', (e) => {
+                const step = parseInt(e.currentTarget.dataset.step);
+                if (step <= this.currentStep || this.isStepCompleted(step - 1)) {
+                    this.goToStep(step);
+                }
+            });
+        });
+
+        // Form validation on input
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('change', () => this.validateCurrentStep());
+            input.addEventListener('input', () => this.validateCurrentStep());
+        });
+
+        // AI assessment preview
+        document.getElementById('enable_ai_assessment').addEventListener('change', (e) => {
+            this.updateAIPreview();
+        });
+    }
+
+    nextStep() {
+        if (this.currentStep < this.totalSteps) {
+            if (this.validateCurrentStep()) {
+                this.saveStepData();
+                this.currentStep++;
+                this.showStep(this.currentStep);
+                this.updateProgress();
+                
+                if (this.currentStep === 5) {
+                    this.updateAIPreview();
+                }
+            }
+        }
+    }
+
+    prevStep() {
+        if (this.currentStep > 1) {
+            this.currentStep--;
+            this.showStep(this.currentStep);
+            this.updateProgress();
+        }
+    }
+
+    goToStep(step) {
+        this.currentStep = step;
+        this.showStep(this.currentStep);
+        this.updateProgress();
+    }
+
+    showStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+        
+        // Show current step
+        document.getElementById(`step-${step}`).classList.add('active');
+        
+        // Update buttons
+        document.getElementById('prev-btn').disabled = step === 1;
+        
+        if (step === this.totalSteps) {
+            document.getElementById('next-btn').classList.add('d-none');
+            document.getElementById('submit-btn').classList.remove('d-none');
+        } else {
+            document.getElementById('next-btn').classList.remove('d-none');
+            document.getElementById('submit-btn').classList.add('d-none');
+        }
+    }
+
+    updateProgress() {
+        const progress = (this.currentStep / this.totalSteps) * 100;
+        document.getElementById('wizard-progress').style.width = progress + '%';
+        document.getElementById('current-step').textContent = this.currentStep;
+        
+        // Update step labels
+        document.querySelectorAll('.step-label').forEach((label, index) => {
+            const stepNum = index + 1;
+            label.classList.remove('active', 'completed');
+            
+            if (stepNum === this.currentStep) {
+                label.classList.add('active');
+            } else if (stepNum < this.currentStep) {
+                label.classList.add('completed');
+            }
+        });
+    }
+
+    validateCurrentStep() {
+        let isValid = true;
+        const currentStepEl = document.getElementById(`step-${this.currentStep}`);
+        const requiredFields = currentStepEl.querySelectorAll('[required]');
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+            }
+        });
+        
+        // Step 1 validation
+        if (this.currentStep === 1) {
+            const requiredStep1 = ['patient_code', 'full_name', 'date_of_birth'];
+            isValid = requiredStep1.every(fieldName => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                return field && field.value.trim();
+            });
+        }
+        
+        // Step 2 validation
+        if (this.currentStep === 2) {
+            const diagnosisDate = document.querySelector('[name="diagnosis_date"]');
+            isValid = diagnosisDate && diagnosisDate.value.trim();
+        }
+        
+        document.getElementById('next-btn').disabled = !isValid;
+        return isValid;
+    }
+
+    isStepCompleted(step) {
+        // Logic to check if step is completed
+        return step < this.currentStep;
+    }
+
+    saveStepData() {
+        const currentStepEl = document.getElementById(`step-${this.currentStep}`);
+        const inputs = currentStepEl.querySelectorAll('input, select, textarea');
+        
+        inputs.forEach(input => {
+            this.formData[input.name] = input.value;
+        });
+    }
+
+    updateAIPreview() {
+        const aiPreview = document.getElementById('ai-preview');
+        const isEnabled = document.getElementById('enable_ai_assessment').checked;
+        
+        if (!isEnabled) {
+            aiPreview.innerHTML = `
+                <div class="text-muted">
+                    <i class="fas fa-robot me-2"></i>
+                    Đánh giá AI đã được tắt. Bạn có thể bật lại sau khi tạo hồ sơ bệnh nhân.
+                </div>
+            `;
+            return;
+        }
+
+        // Simulate AI preview based on collected data
+        setTimeout(() => {
+            const mockAssessment = this.generateMockAssessment();
+            aiPreview.innerHTML = `
+                <div class="text-start">
+                    <h6 class="text-primary mb-2">
+                        <i class="fas fa-chart-line me-2"></i>Đánh giá sơ bộ
+                    </h6>
+                    <div class="mb-2">
+                        <span class="badge bg-${mockAssessment.riskColor} me-2">${mockAssessment.riskLevel}</span>
+                        <small class="text-muted">Dựa trên thông tin hiện có</small>
+                    </div>
+                    <p class="small mb-0">${mockAssessment.summary}</p>
+                </div>
+            `;
+        }, 1500);
+    }
+
+    generateMockAssessment() {
+        // Generate assessment based on collected form data
+        const psa = parseFloat(this.formData.initial_psa) || 0;
+        const gleason = this.formData.gleason_score || '';
+        
+        let riskLevel = 'THẤP';
+        let riskColor = 'success';
+        let summary = 'Nguy cơ thấp dựa trên các thông số lâm sàng ban đầu.';
+        
+        if (psa > 10 || gleason.includes('4+') || gleason.includes('5+')) {
+            riskLevel = 'CAO';
+            riskColor = 'danger';
+            summary = 'Cần theo dõi sát sao và xem xét các biện pháp điều trị tích cực.';
+        } else if (psa > 4 || gleason.includes('3+4')) {
+            riskLevel = 'TRUNG BÌNH';
+            riskColor = 'warning';
+            summary = 'Nguy cơ trung bình, cần theo dõi định kỳ và đánh giá thêm.';
+        }
+        
+        return { riskLevel, riskColor, summary };
+    }
+}
+</script>
+{% endblock %}

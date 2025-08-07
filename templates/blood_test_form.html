@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-vial me-2"></i>{{ title }}
+                </h1>
+                <p class="text-muted mb-0">{{ patient.full_name }} ({{ patient.patient_code }})</p>
+            </div>
+            <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>{{ t.back }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <form method="POST" class="medical-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="card medical-card">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-flask me-2"></i>Thông tin xét nghiệm máu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.test_date.id }}" class="form-label">
+                                {{ form.test_date.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.test_date(class="form-control" + (" is-invalid" if form.test_date.errors else "")) }}
+                            {% for error in form.test_date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.free_psa.id }}" class="form-label">
+                                {{ form.free_psa.label.text }}
+                            </label>
+                            {{ form.free_psa(class="form-control" + (" is-invalid" if form.free_psa.errors else ""), step="0.01") }}
+                            {% for error in form.free_psa.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.total_psa.id }}" class="form-label">
+                                {{ form.total_psa.label.text }}
+                            </label>
+                            {{ form.total_psa(class="form-control" + (" is-invalid" if form.total_psa.errors else ""), step="0.01") }}
+                            {% for error in form.total_psa.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.testosterone.id }}" class="form-label">
+                                {{ form.testosterone.label.text }}
+                            </label>
+                            {{ form.testosterone(class="form-control" + (" is-invalid" if form.testosterone.errors else ""), step="0.1") }}
+                            {% for error in form.testosterone.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.notes.id }}" class="form-label">
+                                {{ form.notes.label.text }}
+                            </label>
+                            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows="3") }}
+                            {% for error in form.notes.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>{{ t.cancel }}
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>{{ t.save }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}Dự báo AI - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-brain text-primary"></i> Dự báo AI</h2>
+                    <p class="text-muted mb-0">Bệnh nhân: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_code }})</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('patient_detail', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-tools"></i> Phân tích AI</h5>
+                    <div class="btn-group flex-wrap" role="group">
+                        <a href="{{ url_for('bcr_prediction', patient_id=patient.id) }}" class="btn btn-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Dự báo BCR
+                        </a>
+                        <a href="{{ url_for('adt_prediction', patient_id=patient.id) }}" class="btn btn-warning">
+                            <i class="fas fa-pills"></i> Lợi ích ADT
+                        </a>
+                        <a href="{{ url_for('adverse_event_prediction', patient_id=patient.id) }}" class="btn btn-info">
+                            <i class="fas fa-shield-alt"></i> Cảnh báo Biến cố
+                        </a>
+                        <a href="{{ url_for('comprehensive_prediction', patient_id=patient.id) }}" class="btn btn-success">
+                            <i class="fas fa-chart-pie"></i> Phân tích Tổng hợp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- BCR Prediction Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Nguy cơ Tái phát Sinh hóa</h5>
+                </div>
+                <div class="card-body">
+                    {% if predictions.predictions.bcr.status == 'success' %}
+                        <div class="text-center mb-3">
+                            <h2 class="display-4 text-danger">{{ predictions.predictions.bcr.risk_score }}</h2>
+                            <small class="text-muted">Điểm nguy cơ (0-100)</small>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6 text-center">
+                                <h5 class="text-warning">{{ predictions.predictions.bcr.recurrence_2year }}%</h5>
+                                <small>Nguy cơ 2 năm</small>
+                            </div>
+                            <div class="col-6 text-center">
+                                <h5 class="text-danger">{{ predictions.predictions.bcr.recurrence_5year }}%</h5>
+                                <small>Nguy cơ 5 năm</small>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-{{ 'danger' if predictions.predictions.bcr.risk_level == 'high' else 'warning' if predictions.predictions.bcr.risk_level == 'moderate' else 'success' }} alert-sm">
+                            <strong>Mức độ:</strong> 
+                            {% if predictions.predictions.bcr.risk_level == 'high' %}
+                                Nguy cơ cao
+                            {% elif predictions.predictions.bcr.risk_level == 'moderate' %}
+                                Nguy cơ trung bình
+                            {% else %}
+                                Nguy cơ thấp
+                            {% endif %}
+                        </div>
+                        
+                        {% if predictions.predictions.bcr.risk_factors %}
+                            <div class="mb-2">
+                                <strong>Yếu tố nguy cơ:</strong>
+                                <ul class="small mb-0">
+                                    {% for factor in predictions.predictions.bcr.risk_factors %}
+                                        <li>{{ factor }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-3x mb-3"></i>
+                            <p>{{ predictions.predictions.bcr.message or 'Chưa có phân tích BCR' }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('bcr_prediction', patient_id=patient.id) }}" class="btn btn-danger btn-sm">
+                        Phân tích chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADT Benefit Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-pills"></i> Lợi ích Liệu pháp Nội tiết</h5>
+                </div>
+                <div class="card-body">
+                    {% if predictions.predictions.adt.status == 'success' %}
+                        <div class="text-center mb-3">
+                            <h2 class="display-4 text-warning">{{ predictions.predictions.adt.benefit_score }}</h2>
+                            <small class="text-muted">Điểm lợi ích (0-100)</small>
+                        </div>
+                        
+                        <div class="alert alert-{{ 'success' if predictions.predictions.adt.benefit_category == 'high' else 'warning' }} alert-sm">
+                            <strong>Phân loại:</strong>
+                            {% if predictions.predictions.adt.benefit_category == 'high' %}
+                                Có khả năng hưởng lợi cao
+                            {% else %}
+                                Có khả năng hưởng lợi thấp
+                            {% endif %}
+                        </div>
+                        
+                        {% if predictions.predictions.adt.predicted_psa_response %}
+                            <div class="mb-2">
+                                <strong>Dự kiến giảm PSA:</strong> {{ predictions.predictions.adt.predicted_psa_response }}%
+                            </div>
+                        {% endif %}
+                        
+                        {% if predictions.predictions.adt.optimal_duration %}
+                            <div class="mb-2">
+                                <strong>Thời gian tối ưu:</strong> {{ predictions.predictions.adt.optimal_duration }} tháng
+                            </div>
+                        {% endif %}
+                        
+                        {% if predictions.predictions.adt.drug_recommendations %}
+                            <div class="mb-2">
+                                <strong>Thuốc khuyến nghị:</strong>
+                                <ul class="small mb-0">
+                                    {% for drug in predictions.predictions.adt.drug_recommendations %}
+                                        <li>{{ drug }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-3x mb-3"></i>
+                            <p>{{ predictions.predictions.adt.message or 'Chưa có phân tích ADT' }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('adt_prediction', patient_id=patient.id) }}" class="btn btn-warning btn-sm">
+                        Phân tích chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Tóm tắt Dự báo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Trạng thái Phân tích:</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" style="width: {{ '100' if predictions.predictions.bcr.status == 'success' else '0' }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            BCR: {{ 'Hoàn thành' if predictions.predictions.bcr.status == 'success' else 'Chưa thực hiện' }}
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-warning" style="width: {{ '100' if predictions.predictions.adt.status == 'success' else '0' }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            ADT: {{ 'Hoàn thành' if predictions.predictions.adt.status == 'success' else 'Chưa thực hiện' }}
+                        </small>
+                    </div>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Cập nhật lần cuối: {{ predictions.prediction_date[:19] | replace('T', ' ') }}
+                        </small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-info alert-sm">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Gợi ý:</strong> Sử dụng phân tích tổng hợp để có cái nhìn toàn diện về tình trạng bệnh nhân.
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('comprehensive_prediction', patient_id=patient.id) }}" class="btn btn-info btn-sm">
+                        Phân tích tổng hợp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Recommendations -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-stethoscope"></i> Khuyến nghị Lâm sàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if predictions.predictions.bcr.status == 'success' and predictions.predictions.bcr.monitoring_recommendations %}
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-eye"></i> Theo dõi BCR:</h6>
+                                <ul>
+                                    {% for rec in predictions.predictions.bcr.monitoring_recommendations %}
+                                        <li>{{ rec }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        {% if predictions.predictions.adt.status == 'success' and predictions.predictions.adt.monitoring_schedule %}
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-calendar-check"></i> Lịch theo dõi ADT:</h6>
+                                <ul>
+                                    {% for schedule in predictions.predictions.adt.monitoring_schedule %}
+                                        <li>{{ schedule }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if predictions.predictions.bcr.status == 'success' and predictions.predictions.bcr.intervention_suggestions %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-medical"></i> Can thiệp được đề xuất:</h6>
+                            <ul class="mb-0">
+                                {% for intervention in predictions.predictions.bcr.intervention_suggestions %}
+                                    <li>{{ intervention }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Quick Actions for Recommendations -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}" style="display: inline;">
+                                    <input type="hidden" name="recommendation_type" value="followup">
+                                    <input type="hidden" name="prediction_data" value="{{ predictions | tojson }}">
+                                    <input type="hidden" name="next" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-calendar-plus"></i> Tạo lịch tái khám
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <form method="POST" action="{{ url_for('create_appointment_from_ai', patient_id=patient.id) }}" style="display: inline;">
+                                    <input type="hidden" name="recommendation_type" value="blood_test">
+                                    <input type="hidden" name="prediction_data" value="{{ predictions | tojson }}">
+                                    <input type="hidden" name="next" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-info">
+                                        <i class="fas fa-vial"></i> Lên lịch xét nghiệm
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.alert-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.progress {
+    height: 0.5rem;
+}
+
+.btn-group .btn {
+    margin: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .btn-group .btn {
+        margin-bottom: 0.5rem;
+    }
+}
+
+.display-4 {
+    font-weight: bold;
+}
+
+.card-header h5 {
+    font-weight: 600;
+}
+</style>
+
+<script>
+// Auto-refresh predictions every 5 minutes
+setInterval(function() {
+    // Có thể thêm AJAX call để refresh dữ liệu
+}, 300000);
+
+// Smooth scroll to sections
+$('.btn').on('click', function(e) {
+    var target = $(this).attr('href');
+    if (target && target.startsWith('#')) {
+        e.preventDefault();
+        $('html, body').animate({
+            scrollTop: $(target).offset().top - 100
+        }, 500);
+    }
+});
+</script>
+{% endblock %}

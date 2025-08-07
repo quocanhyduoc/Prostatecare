@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Hệ thống quản lý bệnh nhân{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">
+                <i class="fas fa-user-plus me-2"></i>{{ title }}
+            </h1>
+            <a href="{% if patient %}{{ url_for('patient_detail', patient_id=patient.id) }}{% else %}{{ url_for('patient_list') }}{% endif %}" 
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>{{ t.back }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <form method="POST" enctype="multipart/form-data" class="medical-form">
+            {{ form.hidden_tag() }}
+            
+            <!-- Administrative Information -->
+            <div class="card medical-card mb-4">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card me-2"></i>Thông tin hành chính
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.patient_code.id }}" class="form-label">
+                                {{ form.patient_code.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.patient_code(class="form-control" + (" is-invalid" if form.patient_code.errors else "")) }}
+                            {% for error in form.patient_code.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.full_name.id }}" class="form-label">
+                                {{ form.full_name.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                            {% for error in form.full_name.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.date_of_birth.id }}" class="form-label">
+                                {{ form.date_of_birth.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.date_of_birth(class="form-control" + (" is-invalid" if form.date_of_birth.errors else "")) }}
+                            {% for error in form.date_of_birth.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.phone.id }}" class="form-label">
+                                {{ form.phone.label.text }}
+                            </label>
+                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                            {% for error in form.phone.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.address.id }}" class="form-label">
+                                {{ form.address.label.text }}
+                            </label>
+                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows="3") }}
+                            {% for error in form.address.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.insurance_number.id }}" class="form-label">
+                                {{ form.insurance_number.label.text }}
+                            </label>
+                            {{ form.insurance_number(class="form-control" + (" is-invalid" if form.insurance_number.errors else "")) }}
+                            {% for error in form.insurance_number.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diagnosis Information -->
+            <div class="card medical-card mb-4">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-stethoscope me-2"></i>Thông tin chẩn đoán
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.diagnosis_date.id }}" class="form-label">
+                                {{ form.diagnosis_date.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.diagnosis_date(class="form-control" + (" is-invalid" if form.diagnosis_date.errors else "")) }}
+                            {% for error in form.diagnosis_date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.gleason_score.id }}" class="form-label">
+                                {{ form.gleason_score.label.text }}
+                            </label>
+                            {{ form.gleason_score(class="form-control" + (" is-invalid" if form.gleason_score.errors else ""), placeholder="Ví dụ: 3+4=7") }}
+                            {% for error in form.gleason_score.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.cancer_stage.id }}" class="form-label">
+                                {{ form.cancer_stage.label.text }}
+                            </label>
+                            {{ form.cancer_stage(class="form-control" + (" is-invalid" if form.cancer_stage.errors else ""), placeholder="Ví dụ: T2a, T3b") }}
+                            {% for error in form.cancer_stage.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.initial_psa.id }}" class="form-label">
+                                {{ form.initial_psa.label.text }}
+                            </label>
+                            {{ form.initial_psa(class="form-control" + (" is-invalid" if form.initial_psa.errors else ""), step="0.01") }}
+                            {% for error in form.initial_psa.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TNM Staging Information -->
+            <div class="card medical-card mb-4">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Phân giai đoạn TNM
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">Giai đoạn lâm sàng (Clinical)</h6>
+                    <div class="row">
+                        <div class="col-lg-4 mb-3">
+                            <label for="{{ form.clinical_t.id }}" class="form-label">
+                                {{ form.clinical_t.label.text }}
+                            </label>
+                            {{ form.clinical_t(class="form-select" + (" is-invalid" if form.clinical_t.errors else "")) }}
+                            {% for error in form.clinical_t.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-4 mb-3">
+                            <label for="{{ form.clinical_n.id }}" class="form-label">
+                                {{ form.clinical_n.label.text }}
+                            </label>
+                            {{ form.clinical_n(class="form-select" + (" is-invalid" if form.clinical_n.errors else "")) }}
+                            {% for error in form.clinical_n.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-4 mb-3">
+                            <label for="{{ form.clinical_m.id }}" class="form-label">
+                                {{ form.clinical_m.label.text }}
+                            </label>
+                            {{ form.clinical_m(class="form-select" + (" is-invalid" if form.clinical_m.errors else "")) }}
+                            {% for error in form.clinical_m.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h6 class="text-primary mb-3">Giai đoạn giải phẫu bệnh (Pathological)</h6>
+                    <div class="row">
+                        <div class="col-lg-4 mb-3">
+                            <label for="{{ form.pathological_t.id }}" class="form-label">
+                                {{ form.pathological_t.label.text }}
+                            </label>
+                            {{ form.pathological_t(class="form-select" + (" is-invalid" if form.pathological_t.errors else "")) }}
+                            {% for error in form.pathological_t.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-4 mb-3">
+                            <label for="{{ form.pathological_n.id }}" class="form-label">
+                                {{ form.pathological_n.label.text }}
+                            </label>
+                            {{ form.pathological_n(class="form-select" + (" is-invalid" if form.pathological_n.errors else "")) }}
+                            {% for error in form.pathological_n.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-4 mb-3">
+                            <label for="{{ form.pathological_m.id }}" class="form-label">
+                                {{ form.pathological_m.label.text }}
+                            </label>
+                            {{ form.pathological_m(class="form-select" + (" is-invalid" if form.pathological_m.errors else "")) }}
+                            {% for error in form.pathological_m.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pathology Image Upload -->
+            <div class="card medical-card mb-4">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-image me-2"></i>Hình ảnh giải phẫu bệnh
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.pathology_image.id }}" class="form-label">
+                                {{ form.pathology_image.label.text }}
+                            </label>
+                            {{ form.pathology_image(class="form-control" + (" is-invalid" if form.pathology_image.errors else ""), accept=".jpg,.jpeg,.png") }}
+                            {% for error in form.pathology_image.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Chỉ chấp nhận file JPG, JPEG, PNG. Tên file sẽ được đổi tự động theo định dạng: tên_bệnh nhân_năm sinh_ngày giờ upload.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sampling Information -->
+            <div class="card medical-card mb-4">
+                <div class="card-header medical-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-microscope me-2"></i>Thông tin lấy mẫu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.sampling_method.id }}" class="form-label">
+                                {{ form.sampling_method.label.text }}
+                            </label>
+                            {{ form.sampling_method(class="form-select" + (" is-invalid" if form.sampling_method.errors else "")) }}
+                            {% for error in form.sampling_method.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-6 mb-3">
+                            <label for="{{ form.sampling_date.id }}" class="form-label">
+                                {{ form.sampling_date.label.text }}
+                            </label>
+                            {{ form.sampling_date(class="form-control" + (" is-invalid" if form.sampling_date.errors else "")) }}
+                            {% for error in form.sampling_date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-end gap-2 mb-4">
+                <a href="{% if patient %}{{ url_for('patient_detail', patient_id=patient.id) }}{% else %}{{ url_for('patient_list') }}{% endif %}" 
+                   class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>{{ t.cancel }}
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>{{ t.save }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách người dùng{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="medical-title">
+                    <i class="fas fa-users me-2"></i>
+                    Danh sách người dùng
+                </h2>
+                <a href="{{ url_for('user_new') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Thêm người dùng
+                </a>
+            </div>
+            
+            <div class="card medical-card">
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Họ và tên</th>
+                                        <th>Tên đăng nhập</th>
+                                        <th>Email</th>
+                                        <th>Vai trò</th>
+                                        <th>Khoa</th>
+                                        <th>Mã NV</th>
+                                        <th>Trạng thái</th>
+                                        <th>Đăng nhập cuối</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="user-avatar me-2">
+                                                    {% if user.role == 'admin' %}
+                                                        <i class="fas fa-user-shield text-danger"></i>
+                                                    {% elif user.role == 'doctor' %}
+                                                        <i class="fas fa-user-md text-primary"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-user-nurse text-success"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <strong>{{ user.full_name }}</strong>
+                                                    {% if user.phone %}
+                                                        <br><small class="text-muted">{{ user.phone }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            {% if user.role == 'admin' %}
+                                                <span class="badge bg-danger">Quản trị viên</span>
+                                            {% elif user.role == 'doctor' %}
+                                                <span class="badge bg-primary">Bác sĩ</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Y tá</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.department or '-' }}</td>
+                                        <td>{{ user.employee_id or '-' }}</td>
+                                        <td>
+                                            {% if user.active %}
+                                                <span class="badge bg-success">Hoạt động</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Tạm dừng</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.last_login %}
+                                                {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                                            {% else %}
+                                                <span class="text-muted">Chưa từng</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('user_edit', user_id=user.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% if user.id != current_user.id %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="confirmUserDeactivation('{{ user.id }}', '{{ user.full_name }}', {{ user.active|lower }})">
+                                                    {% if user.active %}
+                                                        <i class="fas fa-user-slash"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-user-check"></i>
+                                                    {% endif %}
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-users fa-3x mb-3"></i>
+                            <p>Chưa có người dùng nào trong hệ thống</p>
+                            <a href="{{ url_for('user_new') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Thêm người dùng đầu tiên
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmUserDeactivation(userId, userName, isActive) {
+    const action = isActive ? 'tạm dừng' : 'kích hoạt';
+    const message = `Bạn có chắc chắn muốn ${action} tài khoản của ${userName}?`;
+    
+    if (confirm(message)) {
+        // You can implement user deactivation here
+        // For now, just redirect to edit page
+        window.location.href = `/user/${userId}/edit`;
+    }
+}
+</script>
+{% endblock %}

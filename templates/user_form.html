@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="medical-title">
+                    <i class="fas fa-user-plus me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{{ url_for('user_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card medical-card">
+                        <div class="card-header medical-card-header">
+                            <h5 class="mb-0">{{ title }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" novalidate>
+                                {{ form.hidden_tag() }}
+                                
+                                <div class="row">
+                                    <!-- Login Information -->
+                                    <div class="col-md-6">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-sign-in-alt me-2"></i>Thông tin đăng nhập
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.username.label(class="form-label required") }}
+                                            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                                            {% if form.username.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.email.label(class="form-label required") }}
+                                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                                            {% if form.email.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if 'password' in form %}
+                                        <div class="mb-3">
+                                            {{ form.password.label(class="form-label required") }}
+                                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                                            {% if form.password.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">Mật khẩu phải có ít nhất 8 ký tự</div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.password_confirm.label(class="form-label required") }}
+                                            {{ form.password_confirm(class="form-control" + (" is-invalid" if form.password_confirm.errors else "")) }}
+                                            {% if form.password_confirm.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.password_confirm.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Personal Information -->
+                                    <div class="col-md-6">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.full_name.label(class="form-label required") }}
+                                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                                            {% if form.full_name.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.full_name.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.phone.label(class="form-label") }}
+                                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                                            {% if form.phone.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.role.label(class="form-label required") }}
+                                            {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else "")) }}
+                                            {% if form.role.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.role.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                <small>
+                                                    <strong>Y tá:</strong> Đọc, ghi dữ liệu<br>
+                                                    <strong>Bác sĩ:</strong> Đọc, ghi, xóa, xuất dữ liệu<br>
+                                                    <strong>Quản trị viên:</strong> Toàn quyền
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.department.label(class="form-label") }}
+                                            {{ form.department(class="form-control" + (" is-invalid" if form.department.errors else "")) }}
+                                            {% if form.department.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.department.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            {{ form.employee_id.label(class="form-label") }}
+                                            {{ form.employee_id(class="form-control" + (" is-invalid" if form.employee_id.errors else "")) }}
+                                            {% if form.employee_id.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.employee_id.errors %}{{ error }}{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="form-check">
+                                            {{ form.active(class="form-check-input") }}
+                                            {{ form.active.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <hr class="my-4">
+                                
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('user_list') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>Hủy
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>
+                                        {% if user %}Cập nhật{% else %}Tạo mới{% endif %}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+</style>
+{% endblock %}
